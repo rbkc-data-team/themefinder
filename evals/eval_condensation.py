@@ -1,4 +1,6 @@
 import asyncio
+import io
+import os
 from pathlib import Path
 
 import dotenv
@@ -6,15 +8,24 @@ import pandas as pd
 from langchain_openai import AzureChatOpenAI
 
 from themefinder import theme_condensation
-from utils import read_and_render
+from utils import download_file_from_bucket, read_and_render
 
 
-def load_generated_themes() -> tuple[pd.DataFrame, str]:
+def load_generated_themes() -> tuple[str, pd.DataFrame]:
+    dotenv.load_dotenv()
+    bucket_name = os.getenv("S3_BUCKET_NAME")
+    condensed_themes = pd.read_csv(
+        io.BytesIO(
+            download_file_from_bucket(
+                "app_data/evals/theme_refinement/eval_condensed_topics.csv",
+                bucket_name=bucket_name,
+            )
+        )
+    )
     data_dir = Path(__file__).parent / "data/condensation"
-    themes = pd.read_csv(data_dir / "eval_generated_themes.csv")
     with (data_dir / "expanded_question.txt").open() as f:
         expanded_question = f.read()
-    return themes, expanded_question
+    return condensed_themes, expanded_question
 
 
 async def evaluate_condensation():
