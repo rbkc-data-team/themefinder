@@ -1,0 +1,90 @@
+# ThemeFinder
+
+ThemeFinder is a topic modelling Python package designed for analyzing one-to-many question-answer data (i.e. survey responses, public consultations, etc.). See the [docs](docs/pipeline.md) for more info.
+
+> [!IMPORTANT]
+> Incubation project: This project is an incubation project; as such, we don't recommend using this for critical use cases yet. We are currently in a research stage, trialling the tool for case studies across the Civil Service. Find out more about our projects at https://ai.gov.uk/ or contact us with enquiries i-dot-ai-enquiries@cabinetoffice.gov.uk.
+
+
+## Quickstart
+
+### Install the package locally
+
+Clone the package from GitHub: 
+```
+git clone https://github.com/i-dot-ai/themefinder.git
+```
+
+Install the package into your virtual environment, where `<FILE_PATH>` is the location of the `themefinder` directory.
+
+Install with pip:
+```
+pip install -e <FILE_PATH>
+```
+
+Install with poetry:
+```
+poetry add -e <FILE_PATH>
+```
+
+### Usage
+
+ThemeFinder takes as input a [pandas DataFrame](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html) with two columns:
+- `response_id`: A unique identifier for each response
+- `response`: The free text survey response
+
+ThemeFinder is compatible with any instantiated [LangChain LLM runnable](https://python.langchain.com/v0.1/docs/integrations/llms/), but you will need to use JSON structured output.
+
+The function `find_themes` identifies common themes in response and labels them, it also outputs results from intermediate steps in the theme finding pipeline.
+
+For this example, import the following Python packages into your virtual environment: `asyncio`, `pandas`, `lanchain`. And import `themefinder` as described above.
+
+If you are using enviroment variables (eg for API keys), you can use `python-dotenv` to read variables from a `.env` file. The `.example.env` file shows the variable needed if you are using an Azure OpenAI endpoint.
+
+```python
+import asyncio
+from dotenv import load_dotenv
+import pandas as pd
+from langchain_openai import AzureChatOpenAI
+from themefinder import find_themes
+
+# If needed, load LLM API settings from .env file
+load_dotenv()
+
+# Initialise your LLM of choice using langchain
+llm = AzureChatOpenAI(
+    model="gpt-4o",
+    temperature=0,
+    model_kwargs={"response_format": {"type": "json_object"}},
+)
+
+# Set up your data
+responses_df = pd.DataFrame({
+   "response_id": ["1", "2", "3", "4", "5"],
+   "response": ["I think it's awesome, I can use it for consultation analysis.", 
+   "It's great.", "It's a good approach to topic modelling.", "I'm not sure, I need to trial it more.", "I don't like it so much."]
+})
+
+# Add your question
+question = "What do you think of ThemeFinder?"
+
+# Make the system prompt specific to your use case 
+system_prompt = "You are an AI evaluation tool analyzing survey responses about a Python package."
+
+# Run the function to find themes
+# We use asyncio to query LLM endpoints asynchronously, so we need to await our function
+async def main():
+    result = await find_themes(responses_df, llm, question, system_prompt)
+    print(result)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+
+**For more detail - see the [`docs/`](docs/) folder.**
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

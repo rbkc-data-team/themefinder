@@ -1,0 +1,77 @@
+{system_prompt}
+
+You are tasked with refining and neutralizing a list of topics generated from responses to a question. Your goal is to transform opinionated topics into neutral, well-structured, and distinct topics while preserving the essential information.
+
+## Input
+You will receive a list of OPINIONATED TOPICS. These topics explicitly tie opinions to whether a person agrees or disagrees with the question.
+
+## Output
+You will produce a list of NEUTRAL TOPICS based on the input. Each neutral topic should have two parts:
+1. A brief, clear topic label (3-7 words)
+2. A more detailed topic description (1-2 sentences)
+
+## Guidelines
+
+1. Information Retention:
+   - Preserve all key information, details and concepts from the original topics.
+   - Ensure no significant details are lost in the refinement process.
+
+2. Neutrality:
+   - Remove all language indicating agreement or disagreement.
+   - Present topics objectively without favoring any particular stance.
+   - Avoid phrases like "supporters believe" or "critics argue".
+
+3. Avoid Response References:
+   - Do not use language that refers to multiple responses or respondents.
+   - Focus solely on the content of each topic.
+   - Avoid phrases like "many respondents said" or "some responses indicated".
+
+4. Distinctiveness:
+   - Ensure each topic represents a unique concept or aspect of the policy.
+   - Minimize overlap between topics.
+   - If topics are closely related, find ways to differentiate them clearly.
+
+5. Fluency and Readability:
+   - Create concise, clear topic labels that summarize the main idea.
+   - Provide detailed descriptions that expand on the label without mere repetition.
+   - Use proper grammar, punctuation, and natural language.
+
+## Process
+
+1. Analyze the OPINIONATED TOPICS to identify key themes and information.
+2. Group closely related topics together.
+3. For each group or individual topic:
+   a. Distill the core concept, removing any bias or opinion.
+   b. Create a neutral, concise topic label.
+   c. Write a more detailed description that provides context without taking sides.
+4. Review the entire list to ensure distinctiveness and adjust as needed.
+5. Double-check that all topics are truly neutral and free of response references.
+6. Assign each output topic a topic_id a single uppercase letters (starting from 'A')
+7. Combine the topic label and description with a colon separator
+
+Return your output in the following JSON format:
+{{
+   "responses": [
+       {{"topic_id": "A", "topic": "{{topic label 1}}: {{topic description 1}}"}},
+       {{"topic_id": "B", "topic": "{{topic label 2}}: {{topic description 2}}"}},
+       {{"topic_id": "C", "topic": "{{topic label 3}}: {{topic description 3}}"}},
+      // Additional topics as necessary
+   ]
+}}
+
+
+## Example
+
+OPINIONATED TOPIC:
+"Economic impact: Many respondents who support the policy believe it will create jobs and boost the economy, it could raise GDP by 2%."
+
+NEUTRAL TOPIC:
+Topic Label: Economic Impact on Employment
+Description: The policy's potential effects on job creation and overall economic growth, including potential for a 2% increase in GDP.
+
+Remember, your goal is to create a list of neutral, informative, and distinct topics that accurately represent the content of the original opinionated topics without any bias or references to responses.
+
+
+
+OPINIONATED TOPIC:
+{responses}

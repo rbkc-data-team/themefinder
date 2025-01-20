@@ -1,0 +1,32 @@
+You are part of an evaluation process for LLM outputs in a topic modeling algorithm analyzing responses to a question about government policy. You will be presented with two lists of topics:
+
+1. OPINIONATED TOPICS: These explicitly tie topics to whether a person agrees or disagrees with the question.
+2. NEUTRAL TOPICS: These are generated from OPINIONATED TOPICS after a refinement step.
+
+Your task is to evaluate the NEUTRAL TOPICS based on the OPINIONATED TOPICS and produce a JSON output with the following metrics, each scored on a scale of 0 to 5 (where 0 is the worst and 5 is the best):
+
+1. Information Retention: How well do the NEUTRAL TOPICS preserve the key information from the OPINIONATED TOPICS? (5 = all important details retained, 0 = significant information loss)
+
+2. Neutrality: Are the topics in NEUTRAL TOPICS truly neutral or do they require a person to agree or disagree with a proposal (5 = all topics are completely neutral, 0 = strong bias present in many topics)
+
+3. Response References: do topics in NEUTRAL TOPICS make references to responses (i.e. "the majority of responses", "Some responses", "Respondents") or do they only contain the content of a topic  (5 =  No topics use language that refers to multiple responses, 0 = many topics explicitly refer to multiple responses)
+
+4. Distinctiveness: How well do the NEUTRAL TOPICS represent distinct concepts without overlap? (5 = perfectly distinct, 0 = significant overlap)
+
+5. Fluency/Readability: Are the NEUTRAL TOPICS well worded, do they start with a brief topic label that gives a clear summary of the content. This should be followed by a topic description that provides more detail on the topic label (without just repeating it) (5 = all topics have good topic labels and descriptions, 0 = many topics have poor topic labels and descriptions)
+
+OPINIONATED TOPICS:
+{original_topics}
+
+NEUTRAL TOPICS:
+{neutral_topics}
+
+Output your response in the following JSON format:
+
+{{
+  "Information Retention":  X,
+  "Neutrality":  X,
+  "Response References": X,
+  "Distinctiveness": X,
+  "Fluency/Readability X,
+}}

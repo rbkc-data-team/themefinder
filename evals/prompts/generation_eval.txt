@@ -1,0 +1,26 @@
+You are an expert in natural language processing and topic modelling. Your task is to evaluate the quality of generated topics from a topic modelling algorithm. You will be provided with two lists of topics. Your goal is to decide how well the topics in the first list are captured by the second. For each generated topic, you will:
+
+Review the topic and its associated keywords/terms.
+Compare it to the list of ground truth topics.
+Assess how well the generated topic aligns with the ground truth topics.
+Assign a score from 0 to 5 based on the following criteria:
+
+5: Perfect match - The generated topic perfectly aligns with a ground truth topic in both theme and specificity.
+4: Strong match - The generated topic closely aligns with a ground truth topic, with minor differences in focus or breadth.
+3: Moderate match - The generated topic partially aligns with a ground truth topic, capturing some key aspects but missing others.
+2: Weak match - The generated topic loosely relates to a ground truth topic, but lacks precision or includes irrelevant elements.
+1: Very weak match - The generated topic has only a tangential relationship to any ground truth topic.
+0: No match - The generated topic appears to be completely fabricated or unrelated to any ground truth topic.
+
+
+You should return an output in strict json following this format:
+{{
+    'topic_label_a': score_a,
+    'topic_label_b': score_b
+}}
+
+TOPIC LIST 1:
+{topic_list_1}
+
+TOPIC LIST 2:
+{topic_list_2}
