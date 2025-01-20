@@ -29,6 +29,7 @@ jobs:
 
       - name: pytest
         run: |
+          set -x # Enable debugging
           poetry run coverage run -m pytest
           poetry run coverage report -m > coverage.txt
           coverage_percentage=$(grep -Po 'TOTAL\s+\d+\s+\d+\s+\d+\s+\K\d+' coverage.txt)
