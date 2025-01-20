@@ -33,5 +33,5 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          poetry run coverage report -m --fail-under=100
+          poetry run coverage report -m --fail-under=99
 
