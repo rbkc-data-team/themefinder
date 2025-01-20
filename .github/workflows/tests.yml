@@ -27,10 +27,11 @@ jobs:
           python -m pip install --upgrade poetry
           poetry install
 
-      - name: Run tests with pytest
+      - name: Run tests with Pytest
         run: |
           poetry run coverage run -m pytest -v -s
+
       - name: Generate coverage report
         run: |
-          poetry run coverage report -m 
+          poetry run coverage report -m --fail-under=100
 
