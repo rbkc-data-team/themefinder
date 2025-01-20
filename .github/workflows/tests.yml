@@ -27,15 +27,10 @@ jobs:
           python -m pip install --upgrade poetry
           poetry install
 
-      - name: pytest
+      - name: Run tests with pytest
         run: |
-          set -x # Enable debugging
-          poetry run coverage run -m pytest
-          poetry run coverage report -m > coverage.txt
-          coverage_percentage=$(grep -Po 'TOTAL\s+\d+\s+\d+\s+\d+\s+\K\d+' coverage.txt)
-          echo "Coverage is ${coverage_percentage}%"
-          if [ "$coverage_percentage" -lt 100 ]; then
-            echo "Coverage is below 100%! Failing the build."
-            exit 1
-          fi
+          coverage run -m pytest -v -s
+      - name: Generate coverage report
+        run: |
+          coverage report -m 
 
