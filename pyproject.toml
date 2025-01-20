@@ -12,6 +12,8 @@ python = ">=3.12,<3.13"
 pandas = "^2.2.2"
 python-dotenv = "^1.0.1"
 coverage = "^7.6.10"
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.5.50"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
