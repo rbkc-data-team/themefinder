@@ -2,25 +2,25 @@
 
 ThemeFinder's pipeline consists of five distinct stages, each utilizing a specialized LLM prompt:
 
-1. **Sentiment analysis**
-   - Analyses the emotional tone and position of each response using sentiment-focused prompts
-   - Provides structured sentiment categorisation based on LLM analysis
+## Sentiment analysis
+- Analyses the emotional tone and position of each response using sentiment-focused prompts
+- Provides structured sentiment categorisation based on LLM analysis
 
-2. **Theme generation**
-   - Uses exploratory prompts to identify initial themes from response batches
-   - Groups related responses for better context through guided theme extraction
+## Theme generation
+- Uses exploratory prompts to identify initial themes from response batches
+- Groups related responses for better context through guided theme extraction
 
-3. **Theme condensation**
-   - Employs comparative prompts to combine similar or overlapping themes
-   - Reduces redundancy in identified topics through systematic theme evaluation
+## Theme condensation
+- Employs comparative prompts to combine similar or overlapping themes
+- Reduces redundancy in identified topics through systematic theme evaluation
 
-4. **Theme refinement**
-   - Leverages standardisation prompts to normalise theme descriptions
-   - Creates clear, consistent theme definitions through structured refinement
+## Theme refinement
+- Leverages standardisation prompts to normalise theme descriptions
+- Creates clear, consistent theme definitions through structured refinement
 
-5. **Theme mapping**
-   - Utilizes classification prompts to map individual responses to refined themes
-   - Supports multiple theme assignments per response through detailed analysis
+## Theme mapping
+- Utilizes classification prompts to map individual responses to refined themes
+- Supports multiple theme assignments per response through detailed analysis
 
 
 The prompts used at each stage can be found in `src/themefinder/prompts/`.
