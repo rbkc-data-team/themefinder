@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
 ```
 
-**For more detail - see the [`docs/`](docs/) folder.**
+**For more detail - see the docs: [https://i-dot-ai.github.io/themefinder/](https://i-dot-ai.github.io/themefinder/).**
 
 
 ## License
