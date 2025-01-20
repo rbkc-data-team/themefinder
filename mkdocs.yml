@@ -1,0 +1,5 @@
+site_name: ThemeFinder documentation
+site_url: https://github.com/i-dot-ai/themefinder # Update with GitHub Pages link
+repo_url: https://github.com/i-dot-ai/themefinder
+theme:
+  name: material
