@@ -1,17 +1,27 @@
 import asyncio
-from pathlib import Path
+import io
+import os
 
 import dotenv
 import pandas as pd
 from langchain_openai import AzureChatOpenAI
 
 from themefinder import theme_refinement
-from utils import read_and_render
+from utils import download_file_from_bucket, read_and_render
 
 
-def load_condensed_themes() -> pd.DataFrame:
-    parent_dir = Path(__file__).parent
-    return pd.read_csv(f"{parent_dir}/data/refinement/eval_condensed_themes.csv")
+def load_condensed_themes() -> tuple[str, pd.DataFrame]:
+    dotenv.load_dotenv()
+    bucket_name = os.getenv("S3_BUCKET_NAME")
+    condensed_themes = pd.read_csv(
+        io.BytesIO(
+            download_file_from_bucket(
+                "app_data/evals/theme_refinement/eval_condensed_topics.csv",
+                bucket_name=bucket_name,
+            )
+        )
+    )
+    return condensed_themes
 
 
 async def evaluate_refinement():
