@@ -3,7 +3,7 @@
 ThemeFinder is a topic modelling Python package designed for analyzing one-to-many question-answer data (i.e. survey responses, public consultations, etc.). See the [docs](docs/pipeline.md) for more info.
 
 > [!IMPORTANT]
-> Incubation project: This project is an incubation project; as such, we don't recommend using this for critical use cases yet. We are currently in a research stage, trialling the tool for case studies across the Civil Service. Find out more about our projects at https://ai.gov.uk/ or contact us with enquiries i-dot-ai-enquiries@cabinetoffice.gov.uk.
+> Incubation project: This project is an incubation project; as such, we don't recommend using this for critical use cases yet. We are currently in a research stage, trialling the tool for case studies across the Civil Service. Find out more about our projects at https://ai.gov.uk/ or contact us with enquiries themefinder@cabinetoffice.gov.uk.
 
 
 ## Quickstart
