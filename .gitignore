@@ -73,4 +73,8 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Generated when getting test coverage
 .coverage
+
+# Ignore mkdocs site
+site/

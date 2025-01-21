@@ -12,6 +12,8 @@ python = ">=3.12,<3.13"
 pandas = "^2.2.2"
 python-dotenv = "^1.0.1"
 coverage = "^7.6.10"
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.5.50"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -21,6 +23,10 @@ boto3 = "^1.29"
 scikit-learn = "*"
 openpyxl = "^3.1.5"
 pyarrow = "^15.0.0" 
+
+[tool.poetry.group.docs.dependencies]
+mkdocstrings = {extras = ["python"], version = "^0.27.0"}
+mkdocs-material = "^9.5.50"
 
 [tool.pytest.ini_options]
 pythonpath = "."
