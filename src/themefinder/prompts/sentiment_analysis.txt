@@ -11,11 +11,11 @@ You should only return a response in strict json and nothing else. The final out
 {{"responses": [
     {{
         "response_id": "{{response_id_1}}",
-        "position": agreement,
+        "position": {{position_1}},
     }},
     {{
         "response_id": "{{response_id_2}}",
-        "position": agreement,
+        "position": {{position_2}},
     }}
     ...
 ]}}
