@@ -1,3 +1,5 @@
+# API reference
+
 [TOC]
 
 ::: themefinder.core.find_themes
