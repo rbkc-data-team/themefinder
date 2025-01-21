@@ -13,7 +13,7 @@ from utils import download_file_from_bucket, read_and_render
 
 def load_generated_themes() -> tuple[str, pd.DataFrame]:
     dotenv.load_dotenv()
-    bucket_name = os.getenv("S3_BUCKET_NAME")
+    bucket_name = os.getenv("THEMEFINDER_S3_BUCKET_NAME")
     condensed_themes = pd.read_csv(
         io.BytesIO(
             download_file_from_bucket(

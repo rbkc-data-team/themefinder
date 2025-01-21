@@ -15,7 +15,7 @@ from utils import download_file_from_bucket
 
 def load_mapped_responses(question: int = 1) -> tuple[str, pd.DataFrame, pd.DataFrame]:
     dotenv.load_dotenv()
-    bucket_name = os.getenv("S3_BUCKET_NAME")
+    bucket_name = os.getenv("THEMEFINDER_S3_BUCKET_NAME")
     expanded_question = download_file_from_bucket(
         f"app_data/evals/theme_mapping/question_{question}_expanded_question.txt",
         bucket_name=bucket_name,

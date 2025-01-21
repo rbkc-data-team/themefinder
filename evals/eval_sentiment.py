@@ -13,7 +13,7 @@ from utils import download_file_from_bucket
 
 def load_responses() -> tuple[str, pd.DataFrame]:
     dotenv.load_dotenv()
-    bucket_name = os.getenv("S3_BUCKET_NAME")
+    bucket_name = os.getenv("THEMEFINDER_S3_BUCKET_NAME")
     expanded_question = download_file_from_bucket(
         "app_data/evals/response_sentiment/expanded_question.txt",
         bucket_name=bucket_name,
