@@ -34,4 +34,4 @@ ThemeFinder's pipeline consists of five distinct stages, each utilizing a specia
 
 The prompts used at each stage can be found in `src/themefinder/prompts/`.
 
-The file `src/themefinder.core.py` contains the function `find_themes` which runs the pipline. It also contains functions fo each individual stage.
+The file `src/themefinder.core.py` contains the function `find_themes` which runs the pipeline. It also contains functions for each individual stage.

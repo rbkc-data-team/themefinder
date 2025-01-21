@@ -39,7 +39,17 @@ The function `find_themes` identifies common themes in response and labels them,
 
 For this example, import the following Python packages into your virtual environment: `asyncio`, `pandas`, `lanchain`. And import `themefinder` as described above.
 
-If you are using enviroment variables (eg for API keys), you can use `python-dotenv` to read variables from a `.env` file. The `.example.env` file shows the variable needed if you are using an Azure OpenAI endpoint.
+If you are using environment variables (eg for API keys), you can use `python-dotenv` to read variables from a `.env` file. 
+
+If you are using an Azure OpenAI endpoint, you will need the following variables:
+
+- `AZURE_OPENAI_API_KEY`
+- `AZURE_OPENAI_ENDPOINT`
+- `OPENAI_API_VERSION`
+- `DEPLOYMENT_NAME`
+- `AZURE_OPENAI_BASE_URL`
+
+Otherwise you will need whichever variables [LangChain](https://www.langchain.com/) requires for your LLM of choice.
 
 ```python
 import asyncio
