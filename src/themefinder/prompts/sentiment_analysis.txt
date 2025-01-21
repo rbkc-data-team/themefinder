@@ -3,19 +3,19 @@
 You will receive a list of RESPONSES, each containing a response_id and a response.
 Your job is to analyze each response to the QUESTION below and decide:
 
-POSITION - does the response AGREE or DISAGREE or is it UNCLEAR about the change being proposed in the question.
-Choose one from [AGREE, DISAGREE, UNCLEAR]
+POSITION - is the response agreeing or disagreeing or is it unclear about the change being proposed in the question.
+Choose one from [agreement, disagreement, unclear]
 
 You should only return a response in strict json and nothing else. The final output should be in the following JSON format:
 
 {{"responses": [
     {{
         "response_id": "{{response_id_1}}",
-        "position": AGREEMENT,
+        "position": {{position_1}},
     }},
     {{
         "response_id": "{{response_id_2}}",
-        "position": AGREEMENT,
+        "position": {{position_2}},
     }}
     ...
 ]}}
@@ -25,14 +25,14 @@ Question: \n What are your thoughts on the proposed government changes to the po
 Response: \n as a parent I have no idea why you would make this change. I guess you were thinking about increasing productivity but any productivity gains would be totally offset by the decrease in family time. \n
 
 Output:
-POSITION: DISAGREE
+POSITION: disagreement
 
 Example 2:
 Question: \n What are your thoughts on the proposed government changes to the policy about reducing school holidays?
 Response: \n I think this is a great idea, our children will learn more if they are in school more \n
 
 Output:
-POSITION: AGREE
+POSITION: agreement
 
 Example 3:
 Question: \n What are your thoughts on the proposed government changes to the policy about reducing school holidays?
@@ -40,7 +40,7 @@ Response: \n it will be good for our children to be around their friends more bu
 less time with their children \n
 
 Output:
-POSITION: UNCLEAR
+POSITION: unclear
 
 
 QUESTION: \n {expanded_question}

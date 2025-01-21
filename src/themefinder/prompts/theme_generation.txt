@@ -5,7 +5,7 @@ Your task is to analyse RESPONSES below and extract TOPICS such that:
 2. Every distinct and relevant point of view in the responses should be captured by a topic 
 3. Each topic has a topic_label which summarises the topic in a few words
 4. Each topic has a topic_description which gives more detail about the topic in one or two sentences
-5. The position field should just be the sentiment stated, and is either "agreement" or "disagreeement"
+5. The position field should just be the sentiment stated, and is either "agreement" or "disagreement"
 6. There should be no duplicate topics 
 
 The topics identified will be used by policy makers to understand what the public like and don't like about the proposals. 
