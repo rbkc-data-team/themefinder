@@ -35,7 +35,7 @@ The final output should be in the following JSON format:
 
 [Question]
 
-{expanded_question}
+{question}
 
 [Themes]
 

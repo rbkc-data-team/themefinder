@@ -14,7 +14,7 @@ CONSULTATION_SYSTEM_PROMPT = load_prompt_from_file("consultation_system_prompt")
 async def find_themes(
     responses_df: pd.DataFrame,
     llm: Runnable,
-    expanded_question: str,
+    question: str,
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
 ) -> dict[str, pd.DataFrame]:
     """Process survey responses through a multi-stage theme analysis pipeline.
@@ -29,13 +29,13 @@ async def find_themes(
     Args:
         responses_df (pd.DataFrame): DataFrame containing survey responses
         llm (Runnable): Language model instance for text analysis
-        expanded_question (str): The contextualized version of the survey question
+        question (str): The survey question
         system_prompt (str): System prompt to guide the LLM's behavior.
             Defaults to CONSULTATION_SYSTEM_PROMPT.
 
     Returns:
         dict[str, pd.DataFrame]: Dictionary containing results from each pipeline stage:
-            - expanded_question: The contextualized question
+            - question: The survey question
             - sentiment: DataFrame with sentiment analysis results
             - topics: DataFrame with initial generated themes
             - condensed_topics: DataFrame with combined similar themes
@@ -45,34 +45,34 @@ async def find_themes(
     sentiment_df = await sentiment_analysis(
         responses_df,
         llm,
-        expanded_question=expanded_question,
+        question=question,
         system_prompt=system_prompt,
     )
     theme_df = await theme_generation(
         sentiment_df,
         llm,
-        expanded_question=expanded_question,
+        question=question,
         system_prompt=system_prompt,
     )
     condensed_theme_df = await theme_condensation(
-        theme_df, llm, expanded_question=expanded_question, system_prompt=system_prompt
+        theme_df, llm, question=question, system_prompt=system_prompt
     )
     refined_theme_df = await theme_refinement(
         condensed_theme_df,
         llm,
-        expanded_question=expanded_question,
+        question=question,
         system_prompt=system_prompt,
     )
     mapping_df = await theme_mapping(
         sentiment_df,
         llm,
-        expanded_question=expanded_question,
+        question=question,
         refined_themes_df=refined_theme_df,
         system_prompt=system_prompt,
     )
 
     return {
-        "expanded_question": expanded_question,
+        "question": question,
         "sentiment": sentiment_df,
         "topics": theme_df,
         "condensed_topics": condensed_theme_df,
@@ -84,7 +84,7 @@ async def find_themes(
 async def sentiment_analysis(
     responses_df: pd.DataFrame,
     llm: Runnable,
-    expanded_question: str,
+    question: str,
     batch_size: int = 10,
     prompt_template: str | Path | PromptTemplate = "sentiment_analysis",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
@@ -98,8 +98,7 @@ async def sentiment_analysis(
         responses_df (pd.DataFrame): DataFrame containing survey responses to analyze.
             Must contain 'response_id' and 'response' columns.
         llm (Runnable): Language model instance to use for sentiment analysis.
-        expanded_question (str): Contextualized version of the survey question to
-            help guide sentiment analysis.
+        question (str): The survey question.
         batch_size (int, optional): Number of responses to process in each batch.
             Defaults to 10.
         prompt_template (str | Path | PromptTemplate, optional): Template for structuring
@@ -122,7 +121,7 @@ async def sentiment_analysis(
         prompt_template,
         llm,
         batch_size=batch_size,
-        expanded_question=expanded_question,
+        question=question,
         response_id_integrity_check=True,
         system_prompt=system_prompt,
     )
@@ -131,7 +130,7 @@ async def sentiment_analysis(
 async def theme_generation(
     responses_df: pd.DataFrame,
     llm: Runnable,
-    expanded_question: str,
+    question: str,
     batch_size: int = 50,
     partition_key: str | None = "position",
     prompt_template: str | Path | PromptTemplate = "theme_generation",
@@ -145,8 +144,7 @@ async def theme_generation(
         responses_df (pd.DataFrame): DataFrame containing survey responses.
             Must include 'response_id' and 'response' columns.
         llm (Runnable): Language model instance to use for theme generation.
-        expanded_question (str): Contextualized version of the survey question to
-            help guide theme identification.
+        question (str): The survey question.
         batch_size (int, optional): Number of responses to process in each batch.
             Defaults to 50.
         partition_key (str | None, optional): Column name to use for batching related
@@ -169,7 +167,7 @@ async def theme_generation(
         llm,
         batch_size=batch_size,
         partition_key=partition_key,
-        expanded_question=expanded_question,
+        question=question,
         system_prompt=system_prompt,
     )
 
@@ -177,7 +175,7 @@ async def theme_generation(
 async def theme_condensation(
     themes_df: pd.DataFrame,
     llm: Runnable,
-    expanded_question: str,
+    question: str,
     batch_size: int = 10000,
     prompt_template: str | Path | PromptTemplate = "theme_condensation",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
@@ -191,8 +189,7 @@ async def theme_condensation(
         themes_df (pd.DataFrame): DataFrame containing the initial themes identified
             from survey responses.
         llm (Runnable): Language model instance to use for theme condensation.
-        expanded_question (str): Contextualized version of the survey question to
-            help guide theme consolidation.
+        question (str): The survey question.
         batch_size (int, optional): Number of themes to process in each batch.
             Defaults to 10000.
         prompt_template (str | Path | PromptTemplate, optional): Template for structuring
@@ -212,7 +209,7 @@ async def theme_condensation(
         prompt_template,
         llm,
         batch_size=batch_size,
-        expanded_question=expanded_question,
+        question=question,
         system_prompt=system_prompt,
     )
 
@@ -220,7 +217,7 @@ async def theme_condensation(
 async def theme_refinement(
     condensed_themes_df: pd.DataFrame,
     llm: Runnable,
-    expanded_question: str,
+    question: str,
     batch_size: int = 10000,
     prompt_template: str | Path | PromptTemplate = "theme_refinement",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
@@ -236,8 +233,7 @@ async def theme_refinement(
         condensed_themes (pd.DataFrame): DataFrame containing the condensed themes
             from the previous pipeline stage.
         llm (Runnable): Language model instance to use for theme refinement.
-        expanded_question (str): Contextualized version of the survey question to
-            help guide theme refinement.
+        question (str): The survey question.
         batch_size (int, optional): Number of themes to process in each batch.
             Defaults to 10000.
         prompt_template (str | Path | PromptTemplate, optional): Template for structuring
@@ -272,7 +268,7 @@ async def theme_refinement(
         prompt_template,
         llm,
         batch_size=batch_size,
-        expanded_question=expanded_question,
+        question=question,
         system_prompt=system_prompt,
     )
     return transpose_refined_topics(refined_themes)
@@ -281,7 +277,7 @@ async def theme_refinement(
 async def theme_mapping(
     responses_df: pd.DataFrame,
     llm: Runnable,
-    expanded_question: str,
+    question: str,
     refined_themes_df: pd.DataFrame,
     batch_size: int = 20,
     prompt_template: str | Path | PromptTemplate = "theme_mapping",
@@ -296,8 +292,7 @@ async def theme_mapping(
         responses_df (pd.DataFrame): DataFrame containing survey responses.
             Must include 'response_id' and 'response' columns.
         llm (Runnable): Language model instance to use for theme mapping.
-        expanded_question (str): Contextualized version of the survey question to
-            help guide theme mapping.
+        question (str): The survey question.
         refined_themes_df (pd.DataFrame): Single-row DataFrame where each column
             represents a theme (from theme_refinement stage).
         batch_size (int, optional): Number of responses to process in each batch.
@@ -320,7 +315,7 @@ async def theme_mapping(
         prompt_template,
         llm,
         batch_size=batch_size,
-        expanded_question=expanded_question,
+        question=question,
         refined_themes=refined_themes_df.to_dict(orient="records"),
         response_id_integrity_check=True,
         system_prompt=system_prompt,

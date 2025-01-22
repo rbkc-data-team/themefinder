@@ -52,7 +52,7 @@ async def test_id_integrity_failure(mock_llm):
     ]
 
     result = await sentiment_analysis(
-        input_dataframe, mock_llm, expanded_question="doesn't matter"
+        input_dataframe, mock_llm, question="doesn't matter"
     )
     # we got something back
     assert isinstance(result, pd.DataFrame)
@@ -74,9 +74,7 @@ async def test_retries(mock_llm, sample_df):
             content='{"responses": [{"response_id": 1, "position": "agreement", "text": "response1"}, {"response_id": 2, "position": "disagreement", "text": "response2"}]}'
         ),
     ]
-    result = await sentiment_analysis(
-        sample_df, mock_llm, expanded_question="doesn't matter"
-    )
+    result = await sentiment_analysis(sample_df, mock_llm, question="doesn't matter")
     # we got something back
     assert isinstance(result, pd.DataFrame)
     # we hit the llm twice

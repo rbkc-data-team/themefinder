@@ -64,7 +64,7 @@ You should only return a response in strict json and nothing else. The final out
 ]}}
 
 QUESTION:
-{expanded_question}
+{question}
 
 RESPONSES:
 {responses}

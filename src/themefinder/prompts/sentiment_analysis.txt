@@ -43,5 +43,5 @@ Output:
 POSITION: unclear
 
 
-QUESTION: \n {expanded_question}
+QUESTION: \n {question}
 RESPONSES: \n {responses}
