@@ -71,6 +71,10 @@ async def find_themes(
         system_prompt=system_prompt,
     )
 
+    logger.info("Finished finding themes")
+    logger.info(
+        "Provide feedback or report bugs: https://forms.gle/85xUSMvxGzSSKQ499 or themefinder@cabinetoffice.gov.uk"
+    )
     return {
         "expanded_question": expanded_question,
         "sentiment": sentiment_df,

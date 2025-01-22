@@ -1,6 +1,7 @@
 import logging
 import sys
 
+
 logger = logging.getLogger("theme_finder.tasks")
 logger.setLevel(logging.INFO)
 
