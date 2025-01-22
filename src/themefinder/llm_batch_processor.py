@@ -10,7 +10,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import Runnable
 from tenacity import before, retry, stop_after_attempt, wait_random_exponential
 
-from .logging import logger
+from .themefinder_logging import logger
 
 
 @dataclass
