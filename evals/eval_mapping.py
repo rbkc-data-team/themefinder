@@ -13,16 +13,18 @@ from themefinder import theme_mapping
 from utils import download_file_from_bucket
 
 
-def load_mapped_responses(question: int = 1) -> tuple[str, pd.DataFrame, pd.DataFrame]:
+def load_mapped_responses(
+    question_number: int = 1,
+) -> tuple[str, pd.DataFrame, pd.DataFrame]:
     dotenv.load_dotenv()
     bucket_name = os.getenv("THEMEFINDER_S3_BUCKET_NAME")
-    expanded_question = download_file_from_bucket(
-        f"app_data/evals/theme_mapping/question_{question}_expanded_question.txt",
+    question = download_file_from_bucket(
+        f"app_data/evals/theme_mapping/question_{question_number}_expanded_question.txt",
         bucket_name=bucket_name,
     ).decode()
     topics = json.loads(
         download_file_from_bucket(
-            f"app_data/evals/theme_mapping/question_{question}_topics.json",
+            f"app_data/evals/theme_mapping/question_{question_number}_topics.json",
             bucket_name=bucket_name,
         )
     )
@@ -33,13 +35,13 @@ def load_mapped_responses(question: int = 1) -> tuple[str, pd.DataFrame, pd.Data
     responses = pd.read_csv(
         io.BytesIO(
             download_file_from_bucket(
-                f"app_data/evals/theme_mapping/question_{question}_responses.csv",
+                f"app_data/evals/theme_mapping/question_{question_number}_responses.csv",
                 bucket_name=bucket_name,
             )
         )
     )
     responses["topics"] = responses["topics"].apply(ast.literal_eval)
-    return expanded_question, cleaned_topics, responses
+    return question, cleaned_topics, responses
 
 
 async def evaluate_mapping(question_num: int | None = None):
@@ -51,11 +53,11 @@ async def evaluate_mapping(question_num: int | None = None):
     )
     questions_to_process = [question_num] if question_num is not None else range(1, 4)
     for i in questions_to_process:
-        expanded_question, topics, responses = load_mapped_responses(i)
+        question, topics, responses = load_mapped_responses(i)
         result = await theme_mapping(
             responses_df=responses[["response_id", "response"]],
             llm=llm,
-            expanded_question=expanded_question,
+            question=question,
             refined_themes_df=topics,
         )
         responses = responses.merge(

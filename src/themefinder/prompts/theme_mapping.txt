@@ -42,7 +42,7 @@ The final output should be in the following JSON format:
 
 QUESTION:
 
-{expanded_question}
+{question}
 
 TOPIC LIST:
 

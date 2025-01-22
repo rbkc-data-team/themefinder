@@ -38,7 +38,7 @@ async def test_find_themes(mock_llm, sample_df):
             )
         ),
     ]
-    result = await find_themes(sample_df, mock_llm, expanded_question="test question")
+    result = await find_themes(sample_df, mock_llm, question="test question")
     assert isinstance(result, dict)
     assert all(
         key in result
@@ -47,7 +47,7 @@ async def test_find_themes(mock_llm, sample_df):
             "topics",
             "condensed_topics",
             "mapping",
-            "expanded_question",
+            "question",
             "refined_topics",
         ]
     )

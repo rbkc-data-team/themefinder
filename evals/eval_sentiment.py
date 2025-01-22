@@ -14,7 +14,7 @@ from utils import download_file_from_bucket
 def load_responses() -> tuple[str, pd.DataFrame]:
     dotenv.load_dotenv()
     bucket_name = os.getenv("THEMEFINDER_S3_BUCKET_NAME")
-    expanded_question = download_file_from_bucket(
+    question = download_file_from_bucket(
         "app_data/evals/response_sentiment/expanded_question.txt",
         bucket_name=bucket_name,
     ).decode("utf-8")
@@ -26,7 +26,7 @@ def load_responses() -> tuple[str, pd.DataFrame]:
             )
         )
     )
-    return expanded_question, responses
+    return question, responses
 
 
 async def evaluate_sentiment():
@@ -43,7 +43,7 @@ async def evaluate_sentiment():
     result = await sentiment_analysis(
         responses_df=responses[["response_id", "response"]],
         llm=llm,
-        expanded_question=question,
+        question=question,
     )
 
     responses = responses.rename(columns={"position": "supervisor_position"})

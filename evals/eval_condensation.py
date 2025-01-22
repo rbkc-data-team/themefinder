@@ -24,8 +24,8 @@ def load_generated_themes() -> tuple[str, pd.DataFrame]:
     )
     data_dir = Path(__file__).parent / "data/condensation"
     with (data_dir / "expanded_question.txt").open() as f:
-        expanded_question = f.read()
-    return condensed_themes, expanded_question
+        question = f.read()
+    return condensed_themes, question
 
 
 async def evaluate_condensation():
@@ -35,11 +35,11 @@ async def evaluate_condensation():
         temperature=0,
         model_kwargs={"response_format": {"type": "json_object"}},
     )
-    themes, expanded_question = load_generated_themes()
+    themes, question = load_generated_themes()
     condensed_themes = await theme_condensation(
         themes,
         llm=llm,
-        expanded_question=expanded_question,
+        question=question,
     )
     condensed_themes = condensed_themes[["topic_label", "topic_description"]].to_dict(
         orient="records"

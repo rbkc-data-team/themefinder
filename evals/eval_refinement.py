@@ -35,7 +35,7 @@ async def evaluate_refinement():
     refined_themes = await theme_refinement(
         condensed_themes,
         llm=llm,
-        expanded_question="",
+        question="",
     )
     condensed_themes = condensed_themes[["topic_label", "topic_description"]].to_dict(
         orient="records"
