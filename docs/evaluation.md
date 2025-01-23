@@ -1,12 +1,15 @@
 # Evaluation
 
-The `evals/` directory contains our benchmarking evaluation suite used to measure system performance. 
+The `evals/` directory contains our benchmarking evaluation suite used to measure system performance. These are for internal i.AI development only.
 
-**Note on data access**: At present, these can only be used internally within i.AI. The `eval_mapping` and `eval_sentiment` evaluations utilize sensitive data stored in our AWS environment. These specific evaluations will only function with proper AWS account access and credentials. Similarly, the `make run_evals` command assumes you have AWS access configured.
+
+## For internal i.AI users
+
+The `eval_mapping` and `eval_sentiment` evaluations utilize sensitive data stored in our AWS environment. These specific evaluations will only function with proper AWS account access and credentials. Similarly, the `make run_evals` command assumes you have AWS access configured.
 
 These evaluations use the Azure Open AI endpoint.
 
-## Running the evaluations
+### Running the evaluations
 
 Set your environment variables: copy `.env.example` to `.env` and populate with the name of the S3 bucket, and the details for the Azure endpoint.
 
