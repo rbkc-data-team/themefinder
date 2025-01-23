@@ -1,6 +1,6 @@
 # ThemeFinder
 
-ThemeFinder is a topic modelling Python package designed for analyzing one-to-many question-answer data (i.e. survey responses, public consultations, etc.). See the [docs](https://i-dot-ai.github.io/themefinder/) for more info.
+ThemeFinder is a topic modelling Python package designed for analysing one-to-many question-answer data (i.e. survey responses, public consultations, etc.). See the [docs](https://i-dot-ai.github.io/themefinder/) for more info.
 
 > [!IMPORTANT]
 > Incubation project: This project is an incubation project; as such, we don't recommend using this for critical use cases yet. We are currently in a research stage, trialling the tool for case studies across the Civil Service. Find out more about our projects at https://ai.gov.uk/. 
@@ -8,24 +8,9 @@ ThemeFinder is a topic modelling Python package designed for analyzing one-to-ma
 
 ## Quickstart
 
-### Install the package locally
+### Install using your package manager of choice
 
-Clone the package from GitHub: 
-```
-git clone https://github.com/i-dot-ai/themefinder.git
-```
-
-Install the package into your virtual environment, where `<FILE_PATH>` is the location of the `themefinder` directory.
-
-Install with pip:
-```
-pip install -e <FILE_PATH>
-```
-
-Install with poetry:
-```
-poetry add -e <FILE_PATH>
-```
+For example `pip install themefinder` or `poetry add themefinder`.
 
 ### Usage
 
@@ -109,7 +94,7 @@ ThemeFinder's pipeline consists of five distinct stages, each utilizing a specia
 - Employs comparative prompts to combine similar or overlapping themes
 - Reduces redundancy in identified topics through systematic theme evaluation
 
-### Theme refinement
+### Theme refinement
 - Leverages standardisation prompts to normalise theme descriptions
 - Creates clear, consistent theme definitions through structured refinement
 
@@ -124,6 +109,23 @@ The file `src/themefinder.core.py` contains the function `find_themes` which run
 
 
 **For more detail - see the docs: [https://i-dot-ai.github.io/themefinder/](https://i-dot-ai.github.io/themefinder/).**
+
+
+## Installing locally for development
+
+For local development on the `themefinder` package install in editable or development mode.
+
+Install with `pip`:
+```
+pip install -e <FILE_PATH>
+```
+
+Install with `poetry`:
+```
+poetry add -e <FILE_PATH>
+```
+
+Where <FILE_PATH> is the location of the `themefinder` directory.
 
 
 ## License
