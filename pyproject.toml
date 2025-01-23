@@ -6,17 +6,16 @@ authors = ["i.AI <packages@cabinetoffice.gov.uk>"]
 packages = [{include = "themefinder", from = "src"}]
 readme = "README.md"
 license = "MIT"
-licence-files = ["LICENCE"]
 repository = "https://github.com/i-dot-ai/themefinder/"
 documentation = "https://i-dot-ai.github.io/themefinder/"
-classifiers = {
+classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License", 
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Text Processing :: Linguistic",
-}
+]
 
 
 [tool.poetry.dependencies]
