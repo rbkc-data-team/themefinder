@@ -73,7 +73,7 @@ async def find_themes(
 
     logger.info("Finished finding themes")
     logger.info(
-        "Provide feedback or report bugs: https://forms.gle/85xUSMvxGzSSKQ499 or themefinder@cabinetoffice.gov.uk"
+        "Provide feedback or report bugs: https://forms.gle/85xUSMvxGzSSKQ499 or packages@cabinetoffice.gov.uk"
     )
     return {
         "question": question,

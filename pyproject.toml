@@ -1,9 +1,22 @@
 [tool.poetry]
 name = "themefinder"
-version = "0.1.0"
+version = "0.2.0"
 description = "A topic modelling Python package designed for analysing one-to-many question-answer data eg free-text survey responses."
-authors = ["i.AI <themefinder@cabinetoffice.gov.uk>"]
+authors = ["i.AI <packages@cabinetoffice.gov.uk>"]
 packages = [{include = "themefinder", from = "src"}]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/i-dot-ai/themefinder/"
+documentation = "https://i-dot-ai.github.io/themefinder/"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License", 
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+]
+
 
 [tool.poetry.dependencies]
 python = ">=3.12,<4.0"
