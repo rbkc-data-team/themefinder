@@ -2,8 +2,7 @@
 
 The `evals/` directory contains our benchmarking evaluation suite used to measure system performance. These are for internal i.AI development only.
 
-
-## For internal i.AI users
+## For internal i.AI users
 
 The `eval_mapping` and `eval_sentiment` evaluations utilize sensitive data stored in our AWS environment. These specific evaluations will only function with proper AWS account access and credentials. Similarly, the `make run_evals` command assumes you have AWS access configured.
 
