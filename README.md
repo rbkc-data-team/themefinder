@@ -111,23 +111,6 @@ The file `src/themefinder.core.py` contains the function `find_themes` which run
 **For more detail - see the docs: [https://i-dot-ai.github.io/themefinder/](https://i-dot-ai.github.io/themefinder/).**
 
 
-## Installing locally for development
-
-For local development on the `themefinder` package install in editable or development mode.
-
-Install with `pip`:
-```
-pip install -e <FILE_PATH>
-```
-
-Install with `poetry`:
-```
-poetry add -e <FILE_PATH>
-```
-
-Where <FILE_PATH> is the location of the `themefinder` directory.
-
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
