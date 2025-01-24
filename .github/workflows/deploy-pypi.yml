@@ -6,53 +6,60 @@ on:
 
 jobs:
   deploy:
-    if: "!github.event.release.prerelease"
-      runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-      steps:
-        - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-        # Use Python from .python-version for consistency
-        - name: Read Python version
-          id: read_python_version
-          run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
+      - name: Check if release is a pre-release
+        id: prerelease-check
+        run: |
+          if [[ "${{ github.event.release.prerelease }}" == "true" ]]; then
+            echo "This is a pre-release. Exiting."
+            exit 1
+          fi
 
-        - name: Set up Python
-          uses: actions/setup-python@v4
-          with:
+      # Use Python from .python-version for consistency
+      - name: Read Python version
+        id: read_python_version
+        run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-        - name: Install Poetry
-          run: |
-            python -m pip install --upgrade poetry
-            poetry install
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade poetry
+          poetry install
 
-        - name: Extract version from pyproject.toml
-          id: extract_version
-          run: |
-            echo "PACKAGE_VERSION=$(poetry run python -c "import toml; print(toml.load('pyproject.toml')['tool']['poetry']['version'])")" >> $GITHUB_ENV
+      - name: Extract version from pyproject.toml
+        id: extract_version
+        run: |
+          echo "PACKAGE_VERSION=$(poetry run python -c "import toml; print(toml.load('pyproject.toml')['tool']['poetry']['version'])")" >> $GITHUB_ENV
 
 
-        - name: Extract tag name
-          id: extract_tag
-          run: |
-            echo "TAG_NAME=${GITHUB_REF_NAME#'v'}" >> $GITHUB_ENV
+      - name: Extract tag name
+        id: extract_tag
+        run: |
+          echo "TAG_NAME=${GITHUB_REF_NAME#'v'}" >> $GITHUB_ENV
 
         
-        - name: Compare tag with version
-          run: |
-            echo $GITHUB_ENV
-            if [ "$TAG_NAME" == "$PACKAGE_VERSION" ]; then
-                echo "Tag matches the pyproject.toml version."
-            else
-                echo "Tag does not match the pyproject.toml version."
-                exit 1
-            fi
+      - name: Compare tag with version
+        run: |
+          echo $GITHUB_ENV
+          if [ "$TAG_NAME" == "$PACKAGE_VERSION" ]; then
+            echo "Tag matches the pyproject.toml version."
+          else
+            echo "Tag does not match the pyproject.toml version."
+            exit 1
+          fi
 
-        - name: Set Poetry config
-          run: |
-            poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
+      - name: Set Poetry config
+        run: |
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN_WRONG }}
 
-        - name: Publish package
-          run: poetry publish --build
+      - name: Publish package
+        run: poetry publish --build
 
