@@ -21,7 +21,7 @@ Creating a GitHub release will push that version of the package to TestPyPi and 
 
 1. Check with the Consult engineering team in Slack that it is ok to do a release.
 2. Update the version number in `pyproject.toml` - note that we are using SemVer.
-3. Create a [pre-release](https://github.com/i-dot-ai/themefinder/releases) by ticking the box at the bottom of the release. The release should have the tag `vX.Y.Z` where `X.Y.Z` is the version number in `pyproject.toml`.
+3. From the `main` branch, create a [pre-release](https://github.com/i-dot-ai/themefinder/releases) by ticking the box at the bottom of the release. The release should have the tag `vX.Y.Z` where `X.Y.Z` is the version number in `pyproject.toml`.
 4. Use the "Generate release notes" button to get you started on writing a suitable release note.
 5. Creating the pre-release should trigger a deployment to [TestPyPi](https://test.pypi.org/project/themefinder/). Check the GitHub Actions and TestPyPi to ensure that this happens.
 6. Once you're happy, go back to the pre-release and turn it into a [release](https://github.com/i-dot-ai/themefinder/releases).
