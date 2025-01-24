@@ -1,8 +1,8 @@
 name: Test release
 
 on:
-    release:
-      types: [published]
+  release:
+    types: [published]
 
 jobs:
   test:
@@ -29,15 +29,19 @@ jobs:
       - name: Extract version from pyproject.toml
         id: extract_version
         run: |
-          echo "VERSION=$(poetry run python -c "import toml; print(toml.load('pyproject.toml')['tool']['poetry']['version'])")" >> $GITHUB_ENV
+          "PACKAGE_VERSION=$(poetry run python -c "import toml; print(toml.load('pyproject.toml')['tool']['poetry']['version'])")" >> $GITHUB_ENV
+          echo "PACKAGE_VERSION=${PACKAGE_VERSION}"
 
       - name: Extract tag name
         id: extract_tag
-        run: echo "TAG_NAME=${GITHUB_REF_NAME#'v'}" >> $GITHUB_ENV
+        run: |
+          "TAG_NAME=${GITHUB_REF_NAME#'v'}" >> $GITHUB_ENV
+          echo "TAG_NAME=${TAG_NAME}"
+
       
       - name: Compare tag with version
         run: |
-          if [ "$TAG_NAME" == "$VERSION" ]; then
+          if [ "$TAG_NAME" == "$PACKAGE_VERSION" ]; then
             echo "Tag matches the pyproject.toml version."
           else
             echo "Tag does not match the pyproject.toml version."
