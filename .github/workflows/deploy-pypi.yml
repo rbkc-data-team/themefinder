@@ -58,7 +58,7 @@ jobs:
 
       - name: Set Poetry config
         run: |
-          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN_WRONG }}
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
 
       - name: Publish package
         run: poetry publish --build
