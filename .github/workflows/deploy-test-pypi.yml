@@ -1,11 +1,11 @@
-name: Test release
+name: Release to TestPyPi
 
 on:
   release:
     types: [prereleased]
 
 jobs:
-  test:
+  deploy-test:
     runs-on: ubuntu-latest
 
     steps:
