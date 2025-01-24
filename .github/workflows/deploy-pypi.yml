@@ -48,5 +48,11 @@ jobs:
             exit 1
           fi
 
-
+      - name: Set Poetry config
+        run: |
+          poetry config repositories.testpypi https://test.pypi.org/legacy/
+          poetry config pypi-token.testpypi ${{ secrets.TEST_PYPI_API_TOKEN }}
+          
+      - name: Publish package
+        run: poetry publish --build -r testpypi
 
