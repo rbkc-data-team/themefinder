@@ -1,0 +1,48 @@
+name: Test release
+
+on:
+    release:
+      types: [published]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Use Python from .python-version for consistency
+      - name: Read Python version
+        id: read_python_version
+        run: echo "PYTHON_VERSION=$(cat .python-version)" >> $GITHUB_ENV
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade poetry
+          poetry install
+
+      - name: Extract version from pyproject.toml
+        id: extract_version
+        run: |
+          echo "VERSION=$(poetry run python -c "import toml; print(toml.load('pyproject.toml')['tool']['poetry']['version'])")" >> $GITHUB_ENV
+
+      - name: Extract tag name
+        id: extract_tag
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+      
+      - name: Compare tag with version
+        run: |
+          if [ "$TAG_NAME" == "$VERSION" ]; then
+            echo "Tag matches the pyproject.toml version."
+          else
+            echo "Tag does not match the pyproject.toml version."
+            exit 1
+          fi
+
+
+
