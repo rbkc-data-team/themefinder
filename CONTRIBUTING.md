@@ -1,5 +1,5 @@
 # Contributing to ThemeFinder
 
-If you have a bug report, feature request or feedback, please raise a [GitHub issue](https://github.com/i-dot-ai/themefinder/issues) on this repo, or contact us at `packages@cabinetoffice.gov.uk`.
+At present we are not accepting contributions to `themefinder` as it is undergoing rapid development within i.AI. 
 
-The pipeline is currently undergoing rapid development - we are not accepting pull requests at the moment.
+If you have a bug report, feature request or feedback, please raise an [issue](https://github.com/i-dot-ai/themefinder/issues), fill in our [feedback form](https://forms.gle/85xUSMvxGzSSKQ499), or email us at [packages@cabinetoffice.gov.uk](mailto:packages@cabinetoffice.gov.uk).
