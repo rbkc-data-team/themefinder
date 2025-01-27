@@ -34,7 +34,7 @@ Set your environment variables: copy `.env.example` to `.env` and populate with 
 
 Install packages for this repo: `poetry install`.
 
-Ensure you have AWS access set-up, and assume your AWS role to allow you to access the data.
+Ensure you have AWS access set up, and assume your AWS role to allow you to access the data.
 
 These evaluations can be executed either:
 - By running `make run_evals` to execute the complete evaluation suite (or `poetry run make run_evals` if you're using `poetry`)
