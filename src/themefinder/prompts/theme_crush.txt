@@ -1,0 +1,11 @@
+Task: You will receive a JSON list of themes from survey responses about policy changes. Your goal is to identify overlapping or duplicated themes and merge them into a smaller set of distinct themes while retaining all relevant information.
+
+Instructions:
+
+Merge themes that share similar meanings or discuss overlapping concerns.
+Ensure that no key information is lost — preserve all important perspectives.
+Use concise yet comprehensive descriptions for the new merged themes.
+Return the output in the same JSON format as the input.
+The final set should be as small as possible while maintaining clarity and completeness.
+
+ Themes: {responses}
