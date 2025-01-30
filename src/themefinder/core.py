@@ -175,6 +175,7 @@ async def theme_generation(
         system_prompt=system_prompt,
     )
 
+
 def theme_crushing(
     themes_df: pd.DataFrame,
     llm: Runnable,
@@ -183,7 +184,6 @@ def theme_crushing(
     prompt_template: str | Path | PromptTemplate = "theme_crush",
     **kwargs,
 ) -> pd.DataFrame:
-
     prompt_template = load_prompt_from_file(prompt_template)
     prompt = prompt_template.format(prompt_template, responses=themes_df, **kwargs)
     response = llm.invoke(prompt)
@@ -194,11 +194,11 @@ def theme_crushing(
 async def recursive_theme_condensation(
     themes_df: pd.DataFrame,
     llm: Runnable,
-    question: str, 
-    target_number_of_themes: int = 20, 
+    question: str,
+    target_number_of_themes: int = 20,
     batch_size: int = 500,
-    **kwargs) -> pd.DataFrame:
-
+    **kwargs,
+) -> pd.DataFrame:
     current_themes = themes_df
     current_number_of_themes = current_themes.shape[0]
 
@@ -209,7 +209,7 @@ async def recursive_theme_condensation(
             llm=llm,
             question=question,
             batch_size=batch_size,
-            **kwargs
+            **kwargs,
         )
 
         output_number_of_themes = output_themes.shape[0]
@@ -222,15 +222,15 @@ async def recursive_theme_condensation(
         current_number_of_themes = current_themes.shape[0]
 
     if current_number_of_themes > target_number_of_themes:
-
         current_themes = theme_crushing(
             themes_df=current_themes[["topic_label", "topic_description"]],
             llm=llm,
             question=question,
-            batch_size=100
+            batch_size=100,
         )
 
     return current_themes
+
 
 async def theme_condensation(
     themes_df: pd.DataFrame,
@@ -239,7 +239,7 @@ async def theme_condensation(
     batch_size: int = 10000,
     prompt_template: str | Path | PromptTemplate = "theme_condensation",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
-    **kwargs
+    **kwargs,
 ) -> pd.DataFrame:
     """Condense and combine similar themes identified from survey responses.
 
@@ -272,8 +272,9 @@ async def theme_condensation(
         batch_size=batch_size,
         question=question,
         system_prompt=system_prompt,
-        **kwargs
+        **kwargs,
     )
+
 
 async def theme_refinement(
     condensed_themes_df: pd.DataFrame,
