@@ -175,72 +175,16 @@ async def theme_generation(
         system_prompt=system_prompt,
     )
 
-
-def theme_crushing(
-    themes_df: pd.DataFrame,
-    llm: Runnable,
-    question: str,
-    target_number_of_themes: int = 20,
-    prompt_template: str | Path | PromptTemplate = "theme_crush",
-    **kwargs,
-) -> pd.DataFrame:
-    prompt_template = load_prompt_from_file(prompt_template)
-    prompt = prompt_template.format(prompt_template, responses=themes_df, **kwargs)
-    response = llm.invoke(prompt)
-    final_themes_df = pd.DataFrame(json.loads(response.content)["themes"])
-    return final_themes_df
-
-
-async def recursive_theme_condensation(
-    themes_df: pd.DataFrame,
-    llm: Runnable,
-    question: str,
-    target_number_of_themes: int = 20,
-    batch_size: int = 500,
-    **kwargs,
-) -> pd.DataFrame:
-    current_themes = themes_df
-    current_number_of_themes = current_themes.shape[0]
-
-    print("Initial number of themes: ", current_number_of_themes)
-    while current_number_of_themes > target_number_of_themes:
-        output_themes = await theme_condensation(
-            themes_df=current_themes,
-            llm=llm,
-            question=question,
-            batch_size=batch_size,
-            **kwargs,
-        )
-
-        output_number_of_themes = output_themes.shape[0]
-        print("Number of Output Themes: ", output_number_of_themes)
-        if output_number_of_themes == current_number_of_themes:
-            print("Topics no longer being condensed further")
-            break
-
-        current_themes = output_themes
-        current_number_of_themes = current_themes.shape[0]
-
-    if current_number_of_themes > target_number_of_themes:
-        current_themes = theme_crushing(
-            themes_df=current_themes[["topic_label", "topic_description"]],
-            llm=llm,
-            question=question,
-            batch_size=100,
-        )
-
-    return current_themes
-
-
 async def theme_condensation(
     themes_df: pd.DataFrame,
     llm: Runnable,
     question: str,
-    batch_size: int = 10000,
+    batch_size: int = 50,
     prompt_template: str | Path | PromptTemplate = "theme_condensation",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
     **kwargs,
 ) -> pd.DataFrame:
+
     """Condense and combine similar themes identified from survey responses.
 
     This function processes the initially identified themes to combine similar or
@@ -252,7 +196,7 @@ async def theme_condensation(
         llm (Runnable): Language model instance to use for theme condensation.
         question (str): The survey question.
         batch_size (int, optional): Number of themes to process in each batch.
-            Defaults to 10000.
+            Defaults to 50.
         prompt_template (str | Path | PromptTemplate, optional): Template for structuring
             the prompt to the LLM. Can be a string identifier, path to template file,
             or PromptTemplate instance. Defaults to "theme_condensation".
@@ -263,9 +207,32 @@ async def theme_condensation(
         pd.DataFrame: DataFrame containing the condensed themes, where similar topics
             have been combined into broader categories.
     """
-    logger.info(f"Running theme condensation on {len(themes_df)} topics")
-    themes_df["response_id"] = range(len(themes_df))
-    return await batch_and_run(
+
+    themes_df["response_id"] = themes_df.index + 1
+    current_number_of_themes = themes_df.shape[0]
+
+    while current_number_of_themes > batch_size:
+
+        logger.info(f"Running theme condensation on {current_number_of_themes} topics")
+
+        themes_df = await batch_and_run(
+            themes_df,
+            prompt_template,
+            llm,
+            batch_size=batch_size,
+            question=question,
+            system_prompt=system_prompt,
+            **kwargs,
+        )
+        themes_df["response_id"] = themes_df.index + 1
+
+        if len(themes_df) == current_number_of_themes:
+            logger.info("Themes no longer being condensed")
+            break
+        
+        current_number_of_themes = themes_df.shape[0]
+
+    themes_df = await batch_and_run(
         themes_df,
         prompt_template,
         llm,
@@ -274,6 +241,54 @@ async def theme_condensation(
         system_prompt=system_prompt,
         **kwargs,
     )
+
+    logger.info(f"Final number of condensed themes: {themes_df.shape[0]}")
+    return themes_df
+
+
+
+# async def theme_condensation(
+#     themes_df: pd.DataFrame,
+#     llm: Runnable,
+#     question: str,
+#     batch_size: int = 10000,
+#     prompt_template: str | Path | PromptTemplate = "theme_condensation",
+#     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
+#     **kwargs,
+# ) -> pd.DataFrame:
+#     """Condense and combine similar themes identified from survey responses.
+
+#     This function processes the initially identified themes to combine similar or
+#     overlapping topics into more cohesive, broader categories using an LLM.
+
+#     Args:
+#         themes_df (pd.DataFrame): DataFrame containing the initial themes identified
+#             from survey responses.
+#         llm (Runnable): Language model instance to use for theme condensation.
+#         question (str): The survey question.
+#         batch_size (int, optional): Number of themes to process in each batch.
+#             Defaults to 10000.
+#         prompt_template (str | Path | PromptTemplate, optional): Template for structuring
+#             the prompt to the LLM. Can be a string identifier, path to template file,
+#             or PromptTemplate instance. Defaults to "theme_condensation".
+#         system_prompt (str): System prompt to guide the LLM's behavior.
+#             Defaults to CONSULTATION_SYSTEM_PROMPT.
+
+#     Returns:
+#         pd.DataFrame: DataFrame containing the condensed themes, where similar topics
+#             have been combined into broader categories.
+#     """
+#     logger.info(f"Running theme condensation on {len(themes_df)} topics")
+#     themes_df["response_id"] = range(len(themes_df))
+#     return await batch_and_run(
+#         themes_df,
+#         prompt_template,
+#         llm,
+#         batch_size=batch_size,
+#         question=question,
+#         system_prompt=system_prompt,
+#         **kwargs,
+#     )
 
 
 async def theme_refinement(
