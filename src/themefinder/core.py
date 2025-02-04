@@ -175,6 +175,7 @@ async def theme_generation(
         system_prompt=system_prompt,
     )
 
+
 async def theme_condensation(
     themes_df: pd.DataFrame,
     llm: Runnable,
@@ -184,7 +185,6 @@ async def theme_condensation(
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
     **kwargs,
 ) -> pd.DataFrame:
-
     """Condense and combine similar themes identified from survey responses.
 
     This function processes the initially identified themes to combine similar or
@@ -212,7 +212,6 @@ async def theme_condensation(
     current_number_of_themes = themes_df.shape[0]
 
     while current_number_of_themes > batch_size:
-
         logger.info(f"Running theme condensation on {current_number_of_themes} topics")
 
         themes_df = await batch_and_run(
@@ -229,7 +228,7 @@ async def theme_condensation(
         if len(themes_df) == current_number_of_themes:
             logger.info("Themes no longer being condensed")
             break
-        
+
         current_number_of_themes = themes_df.shape[0]
 
     themes_df = await batch_and_run(
@@ -244,7 +243,6 @@ async def theme_condensation(
 
     logger.info(f"Final number of condensed themes: {themes_df.shape[0]}")
     return themes_df
-
 
 
 # async def theme_condensation(
