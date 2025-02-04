@@ -179,7 +179,7 @@ async def theme_condensation(
     themes_df: pd.DataFrame,
     llm: Runnable,
     question: str,
-    batch_size: int = 50,
+    batch_size: int = 100,
     prompt_template: str | Path | PromptTemplate = "theme_condensation",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
     **kwargs,
@@ -196,7 +196,7 @@ async def theme_condensation(
         llm (Runnable): Language model instance to use for theme condensation.
         question (str): The survey question.
         batch_size (int, optional): Number of themes to process in each batch.
-            Defaults to 50.
+            Defaults to 100.
         prompt_template (str | Path | PromptTemplate, optional): Template for structuring
             the prompt to the LLM. Can be a string identifier, path to template file,
             or PromptTemplate instance. Defaults to "theme_condensation".
