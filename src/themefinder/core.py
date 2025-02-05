@@ -211,7 +211,9 @@ async def theme_condensation(
     current_number_of_themes = themes_df.shape[0]
 
     while current_number_of_themes > batch_size:
-        logger.info(f"Running theme condensation on {current_number_of_themes} topics")
+        logger.info(
+            f"Running recursive theme condensation on {current_number_of_themes} topics"
+        )
 
         themes_df = await batch_and_run(
             themes_df,
@@ -242,50 +244,6 @@ async def theme_condensation(
 
     logger.info(f"Final number of condensed themes: {themes_df.shape[0]}")
     return themes_df
-
-
-# async def theme_condensation(
-#     themes_df: pd.DataFrame,
-#     llm: Runnable,
-#     question: str,
-#     batch_size: int = 10000,
-#     prompt_template: str | Path | PromptTemplate = "theme_condensation",
-#     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
-#     **kwargs,
-# ) -> pd.DataFrame:
-#     """Condense and combine similar themes identified from survey responses.
-
-#     This function processes the initially identified themes to combine similar or
-#     overlapping topics into more cohesive, broader categories using an LLM.
-
-#     Args:
-#         themes_df (pd.DataFrame): DataFrame containing the initial themes identified
-#             from survey responses.
-#         llm (Runnable): Language model instance to use for theme condensation.
-#         question (str): The survey question.
-#         batch_size (int, optional): Number of themes to process in each batch.
-#             Defaults to 10000.
-#         prompt_template (str | Path | PromptTemplate, optional): Template for structuring
-#             the prompt to the LLM. Can be a string identifier, path to template file,
-#             or PromptTemplate instance. Defaults to "theme_condensation".
-#         system_prompt (str): System prompt to guide the LLM's behavior.
-#             Defaults to CONSULTATION_SYSTEM_PROMPT.
-
-#     Returns:
-#         pd.DataFrame: DataFrame containing the condensed themes, where similar topics
-#             have been combined into broader categories.
-#     """
-#     logger.info(f"Running theme condensation on {len(themes_df)} topics")
-#     themes_df["response_id"] = range(len(themes_df))
-#     return await batch_and_run(
-#         themes_df,
-#         prompt_template,
-#         llm,
-#         batch_size=batch_size,
-#         question=question,
-#         system_prompt=system_prompt,
-#         **kwargs,
-#     )
 
 
 async def theme_refinement(
