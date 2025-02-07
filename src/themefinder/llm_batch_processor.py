@@ -219,7 +219,7 @@ async def call_llm(
     failed_ids: set = set()
 
     @retry(
-        wait=wait_random_exponential(min=1, max=60),
+        wait=wait_random_exponential(min=1, max=20),
         stop=stop_after_attempt(6),
         before=before.before_log(logger=logger, log_level=logging.DEBUG),
         reraise=True,
