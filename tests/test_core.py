@@ -67,12 +67,8 @@ async def test_theme_condensation(monkeypatch):
       - On the final call (after the loop), returns a DataFrame with 2 rows.
     """
     initial_df = pd.DataFrame({"theme": [f"theme{i}" for i in range(1, 6)]})
-
-    # First call: condensation reduces rows from 5 to 3.
     df_first = pd.DataFrame({"theme": ["A", "B", "C"]})
-    # Second call: returns the same number of rows (3), so the while loop should break.
     df_second = pd.DataFrame({"theme": ["A", "B", "C"]})
-    # Final call (outside the loop): returns the final condensed DataFrame with 2 rows.
     df_final = pd.DataFrame({"theme": ["A", "B"]})
     dummy_outputs = [df_first, df_second, df_final]
 
@@ -96,10 +92,4 @@ async def test_theme_condensation(monkeypatch):
         question="test question",
         batch_size=2,
     )
-
-    # --- Assertions ---
-    # We expect:
-    #   - The first call (reducing from 5 to 3 rows),
-    #   - The second call (returns 3 rows, so while loop exits),
-    #   - The final call (returns 2 rows) => total of 3 calls.
     assert call_count == 3, "batch_and_run should have been called 3 times"
