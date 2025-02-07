@@ -206,15 +206,14 @@ async def theme_condensation(
         pd.DataFrame: DataFrame containing the condensed themes, where similar topics
             have been combined into broader categories.
     """
+    logger.info(f"Running theme condensation on {len(themes_df)} responses")
+    themes_df["response_id"] = range(len(themes_df))
 
-    themes_df["response_id"] = themes_df.index + 1
-    current_number_of_themes = themes_df.shape[0]
-
-    while current_number_of_themes > batch_size:
+    n_themes = themes_df.shape[0]
+    while n_themes > batch_size:
         logger.info(
-            f"Running recursive theme condensation on {current_number_of_themes} topics"
+            f"{n_themes} larger than batch size, using recursive theme condensation"
         )
-
         themes_df = await batch_and_run(
             themes_df,
             prompt_template,
@@ -224,13 +223,11 @@ async def theme_condensation(
             system_prompt=system_prompt,
             **kwargs,
         )
-        themes_df["response_id"] = themes_df.index + 1
-
-        if len(themes_df) == current_number_of_themes:
+        themes_df["response_id"] = range(len(themes_df))
+        if len(themes_df) == n_themes:
             logger.info("Themes no longer being condensed")
             break
-
-        current_number_of_themes = themes_df.shape[0]
+        n_themes = themes_df.shape[0]
 
     themes_df = await batch_and_run(
         themes_df,
@@ -285,7 +282,7 @@ async def theme_refinement(
         transposes the output for improved readability and easier downstream
         processing.
     """
-    logger.info(f"Running topic refinement on {len(condensed_themes_df)} responses")
+    logger.info(f"Running theme refinement on {len(condensed_themes_df)} responses")
     condensed_themes_df["response_id"] = range(len(condensed_themes_df))
 
     def transpose_refined_topics(refined_themes: pd.DataFrame):
