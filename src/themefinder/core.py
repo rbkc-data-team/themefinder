@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -15,6 +16,7 @@ async def find_themes(
     llm: Runnable,
     question: str,
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
+    verbose: bool = True,
 ) -> dict[str, pd.DataFrame]:
     """Process survey responses through a multi-stage theme analysis pipeline.
 
@@ -31,6 +33,8 @@ async def find_themes(
         question (str): The survey question
         system_prompt (str): System prompt to guide the LLM's behavior.
             Defaults to CONSULTATION_SYSTEM_PROMPT.
+        verbose (bool): Whether to show information messages during processing.
+            Defaults to True.
 
     Returns:
         dict[str, pd.DataFrame]: Dictionary containing results from each pipeline stage:
@@ -41,6 +45,8 @@ async def find_themes(
             - refined_topics: DataFrame with refined theme definitions
             - mapping: DataFrame mapping responses to final themes
     """
+    logger.setLevel(logging.INFO if verbose else logging.CRITICAL)
+
     sentiment_df = await sentiment_analysis(
         responses_df,
         llm,
