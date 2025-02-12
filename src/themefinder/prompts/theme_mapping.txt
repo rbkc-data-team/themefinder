@@ -10,7 +10,7 @@ You will be given:
         {{'response_id': 'free text response'}}
 
 Your task is to analyze each response and decide which topics are present. Guidelines:
-    - You can only assign to a response to a topic in the provided TOPIC LIST
+    - You can only assign a response to a topic in the provided TOPIC LIST
     - A response doesn't need to exactly match the language used in the TOPIC LIST, it should be considered a match if it expresses a similar sentiment.
     - You must use the alphabetic 'topic_id' to indicate which topic you have assigned.
     - Each response can be assigned to multiple topics if it matches more than one topic from the TOPIC LIST.

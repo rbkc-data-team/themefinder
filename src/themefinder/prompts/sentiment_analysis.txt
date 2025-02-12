@@ -6,7 +6,7 @@ Your job is to analyze each response to the QUESTION below and decide:
 POSITION - is the response agreeing or disagreeing or is it unclear about the change being proposed in the question.
 Choose one from [agreement, disagreement, unclear]
 
-You should only return a response in strict json and nothing else. The final output should be in the following JSON format:
+The final output should be in the following JSON format:
 
 {{"responses": [
     {{
@@ -20,6 +20,8 @@ You should only return a response in strict json and nothing else. The final out
     ...
 ]}}
 
+
+## EXAMPLE
 Example 1:
 Question: \n What are your thoughts on the proposed government changes to the policy about reducing school holidays?
 Response: \n as a parent I have no idea why you would make this change. I guess you were thinking about increasing productivity but any productivity gains would be totally offset by the decrease in family time. \n

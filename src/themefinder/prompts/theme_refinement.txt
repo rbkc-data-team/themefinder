@@ -1,6 +1,7 @@
 {system_prompt}
 
-You are tasked with refining and neutralizing a list of topics generated from responses to a question. Your goal is to transform opinionated topics into neutral, well-structured, and distinct topics while preserving the essential information.
+You are tasked with refining and neutralizing a list of topics generated from responses to a question. 
+Your goal is to transform opinionated topics into neutral, well-structured, and distinct topics while preserving the essential information.
 
 ## Input
 You will receive a list of OPINIONATED TOPICS. These topics explicitly tie opinions to whether a person agrees or disagrees with the question.
@@ -60,7 +61,7 @@ Return your output in the following JSON format:
 }}
 
 
-## Example
+## EXAMPLE
 
 OPINIONATED TOPIC:
 "Economic impact: Many respondents who support the policy believe it will create jobs and boost the economy, it could raise GDP by 2%."
