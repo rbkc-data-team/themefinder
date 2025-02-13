@@ -1,53 +1,20 @@
 {system_prompt}
 
-Your task is to analyse RESPONSES below and extract TOPICS such that: 
-1. Each topic summarises points of view expressed in the responses 
+Below is a question and a list of responses to that question.
+
+Your task is to analyze the RESPONSES below and extract TOPICS such that: 
+1. Each topic summarizes a point of view expressed in the responses 
 2. Every distinct and relevant point of view in the responses should be captured by a topic 
-3. Each topic has a topic_label which summarises the topic in a few words
+3. Each topic has a topic_label which summarizes the topic in a few words
 4. Each topic has a topic_description which gives more detail about the topic in one or two sentences
-5. The position field should just be the sentiment stated, and is either "agreement" or "disagreement"
+5. The position field should just be the sentiment stated, and is either "agreement" or "disagreement" or "unclear"
 6. There should be no duplicate topics 
 
 The topics identified will be used by policy makers to understand what the public like and don't like about the proposals. 
 
 Here is an example of how to extract topics from some responses
 
-EXAMPLE:
-
-    POSITION 
-    disagreement
-
-    QUESTION 
-    What are your views on the proposed change by the government to introduce a 2% tax on fast food meat products. 
-
-    RESPONSES 
-    [
-        {{"response": "I wish the government would stop interfering in the lves of its citizens. It only ever makes things worse. This change will just cost us all more money, and especially poorer people", "position": "disagreement"}},
-        {{"response": "Even though it will make people eat more healthier, I beleibe the government should interfer less and not more!", "position": "disagreement"}},
-        {{"response": "I hate grapes", "position": "disagreement"}},
-    ]
-
-    OUTPUTS
-
-    {{"responses": [
-        {{
-            "topic_label": "Government overreach",
-            "topic_description": "Some people thought the proposals would result in government interfering too much with citizen's lives",
-            "position": "disagreement"
-        }},
-        {{
-            "topic_label": "Regressive change",
-            "topic_description": "Some people thought the change would have a larger negative impact on poorer people",
-            "position": "disagreement"
-        }},
-        {{
-            "topic_label": "Health",
-            "topic_description": "Some people thought the change would result in people eating healthier diets",
-            "position": "disagreement"
-        }},
-    ]}}
-
-You should only return a response in strict json and nothing else. The final output should be in the following JSON format:
+The final output should be in the following JSON format:
 
 {{"responses": [
     {{
@@ -62,6 +29,39 @@ You should only return a response in strict json and nothing else. The final out
     }},
     // Additional topics as necessary
 ]}}
+
+## EXAMPLE
+
+QUESTION 
+What are your views on the proposed change by the government to introduce a 2% tax on fast food meat products. 
+
+RESPONSES 
+[
+    {{"response": "I wish the government would stop interfering in the lves of its citizens. It only ever makes things worse. This change will just cost us all more money, and especially poorer people", "position": "disagreement"}},
+    {{"response": "Even though it will make people eat more healthier, I beleibe the government should interfer less and not more!", "position": "disagreement"}},
+    {{"response": "I hate grapes", "position": "disagreement"}},
+]
+
+OUTPUTS
+
+{{"responses": [
+    {{
+        "topic_label": "Government overreach",
+        "topic_description": "The proposals would result in government interfering too much with citizen's lives",
+        "position": "disagreement"
+    }},
+    {{
+        "topic_label": "Regressive change",
+        "topic_description": "The change would have a larger negative impact on poorer people",
+        "position": "disagreement"
+    }},
+    {{
+        "topic_label": "Health",
+        "topic_description": "The change would result in people eating healthier diets",
+        "position": "disagreement"
+    }},
+]}}
+
 
 QUESTION:
 {question}
