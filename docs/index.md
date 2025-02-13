@@ -27,6 +27,9 @@ ThemeFinder's pipeline consists of five distinct stages, each utilizing a specia
 - Leverages standardisation prompts to normalise theme descriptions
 - Creates clear, consistent theme definitions through structured refinement
 
+### Theme target alignment
+- Optional step to consolidate themes down to a target number
+
 ### Theme mapping
 - Utilizes classification prompts to map individual responses to refined themes
 - Supports multiple theme assignments per response through detailed analysis
