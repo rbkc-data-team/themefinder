@@ -229,6 +229,7 @@ async def theme_condensation(
             system_prompt=system_prompt,
             **kwargs,
         )
+        themes_df = themes_df.sample(frac=1).reset_index(drop=True)
         themes_df["response_id"] = range(len(themes_df))
         if len(themes_df) == n_themes:
             logger.info("Themes no longer being condensed")
