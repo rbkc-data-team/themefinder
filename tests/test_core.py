@@ -20,6 +20,7 @@ async def test_find_themes(mock_llm, sample_df):
             content='{"responses": [{"condensed_themes": ["main_theme1", "main_theme2"]}]}'
         ),
         MagicMock(content='{"responses": [{"topic_id": "label1", "topic": "desc1"}]}'),
+        MagicMock(content='{"responses": [{"topic_id": "label1", "topic": "desc1"}]}'),
         MagicMock(
             content=json.dumps(
                 {
@@ -39,20 +40,22 @@ async def test_find_themes(mock_llm, sample_df):
             )
         ),
     ]
-    result = await find_themes(sample_df, mock_llm, question="test question")
+    result = await find_themes(
+        sample_df, mock_llm, question="test question", target_n_themes=2
+    )
     assert isinstance(result, dict)
     assert all(
         key in result
         for key in [
             "sentiment",
             "topics",
-            "condensed_topics",
+            "condensed_themes",
             "mapping",
             "question",
-            "refined_topics",
+            "refined_themes",
         ]
     )
-    assert mock_llm.ainvoke.call_count == 6
+    assert mock_llm.ainvoke.call_count == 7
 
 
 @pytest.mark.asyncio
