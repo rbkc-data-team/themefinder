@@ -1,0 +1,26 @@
+{system_prompt}
+Input: You will receive a JSON array of themes, where each theme contains a description of a topic or concept.
+
+Goal: Consolidate these themes into approximately {target_n_themes} distinct categories by:
+1. Identifying and combining similar or overlapping themes
+2. Preserving all significant details and perspectives
+3. Creating clear, comprehensive descriptions for each merged theme
+
+Requirements:
+- Each consolidated theme should capture all relevant information from its source themes
+- Final descriptions should be concise but thorough
+- The merged themes should be distinct from each other with minimal overlap
+
+Return your output in the following JSON format:
+
+{{
+   "responses": [
+       {{"topic_id": "A", "topic": "{{topic label 1}}: {{topic description 1}}"}},
+       {{"topic_id": "B", "topic": "{{topic label 2}}: {{topic description 2}}"}},
+       {{"topic_id": "C", "topic": "{{topic label 3}}: {{topic description 3}}"}},
+      // Additional topics as necessary
+   ]
+}}
+
+Themes to analyze: 
+{responses}

@@ -15,6 +15,7 @@ async def find_themes(
     responses_df: pd.DataFrame,
     llm: Runnable,
     question: str,
+    target_n_themes: int | None = None,
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
     verbose: bool = True,
 ) -> dict[str, pd.DataFrame]:
@@ -25,12 +26,15 @@ async def find_themes(
     2. Initial theme generation
     3. Theme condensation (combining similar themes)
     4. Theme refinement
-    5. Mapping responses to refined themes
+    5. Theme target alignment (optional, if target_n_themes is specified)
+    6. Mapping responses to refined themes
 
     Args:
         responses_df (pd.DataFrame): DataFrame containing survey responses
         llm (Runnable): Language model instance for text analysis
         question (str): The survey question
+        target_n_themes (int | None, optional): Target number of themes to consolidate to.
+            If None, skip theme target alignment step. Defaults to None.
         system_prompt (str): System prompt to guide the LLM's behavior.
             Defaults to CONSULTATION_SYSTEM_PROMPT.
         verbose (bool): Whether to show information messages during processing.
@@ -68,6 +72,14 @@ async def find_themes(
         question=question,
         system_prompt=system_prompt,
     )
+    if target_n_themes is not None:
+        refined_theme_df = await theme_target_alignment(
+            refined_theme_df,
+            llm,
+            question=question,
+            target_n_themes=target_n_themes,
+            system_prompt=system_prompt,
+        )
     mapping_df = await theme_mapping(
         sentiment_df,
         llm,
@@ -84,8 +96,8 @@ async def find_themes(
         "question": question,
         "sentiment": sentiment_df,
         "topics": theme_df,
-        "condensed_topics": condensed_theme_df,
-        "refined_topics": refined_theme_df,
+        "condensed_themes": condensed_theme_df,
+        "refined_themes": refined_theme_df,
         "mapping": mapping_df,
     }
 
@@ -291,7 +303,7 @@ async def theme_refinement(
     logger.info(f"Running theme refinement on {len(condensed_themes_df)} responses")
     condensed_themes_df["response_id"] = range(len(condensed_themes_df))
 
-    def transpose_refined_topics(refined_themes: pd.DataFrame):
+    def transpose_refined_themes(refined_themes: pd.DataFrame):
         """Transpose topics for increased legibility."""
         transposed_df = pd.DataFrame(
             [refined_themes["topic"].to_numpy()], columns=refined_themes["topic_id"]
@@ -306,7 +318,74 @@ async def theme_refinement(
         question=question,
         system_prompt=system_prompt,
     )
-    return transpose_refined_topics(refined_themes)
+    return transpose_refined_themes(refined_themes)
+
+
+async def theme_target_alignment(
+    refined_themes_df: pd.DataFrame,
+    llm: Runnable,
+    question: str,
+    target_n_themes: int = 10,
+    batch_size: int = 10000,
+    prompt_template: str | Path | PromptTemplate = "theme_target_alignment",
+    system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
+) -> pd.DataFrame:
+    """Align themes to target number using an LLM.
+
+    This function processes refined themes to consolidate them into a target number of
+    distinct categories while preserving all significant details and perspectives.
+    It transforms the output format for improved readability by transposing the
+    results into a single-row DataFrame where columns represent individual themes.
+
+    Args:
+        refined_themes_df (pd.DataFrame): DataFrame containing the refined themes
+            from the previous pipeline stage.
+        llm (Runnable): Language model instance to use for theme alignment.
+        question (str): The survey question.
+        target_n_themes (int, optional): Target number of themes to consolidate to.
+            Defaults to 10.
+        batch_size (int, optional): Number of themes to process in each batch.
+            Defaults to 10000.
+        prompt_template (str | Path | PromptTemplate, optional): Template for structuring
+            the prompt to the LLM. Can be a string identifier, path to template file,
+            or PromptTemplate instance. Defaults to "theme_target_alignment".
+        system_prompt (str): System prompt to guide the LLM's behavior.
+            Defaults to CONSULTATION_SYSTEM_PROMPT.
+
+    Returns:
+        pd.DataFrame: A single-row DataFrame where:
+            - Each column represents a unique theme (identified by topic_id)
+            - The values contain the aligned theme descriptions
+            - The format is optimized for subsequent theme mapping operations
+
+    Note:
+        The function adds sequential response_ids to the input DataFrame and
+        transposes the output for improved readability and easier downstream
+        processing.
+    """
+    logger.info(
+        f"Running theme target alignment on {len(refined_themes_df.columns)} themes compressing to {target_n_themes} themes"
+    )
+    refined_themes_df = refined_themes_df.T.rename(columns={0: "topic"})
+    refined_themes_df["response_id"] = range(len(refined_themes_df))
+
+    def transpose_aligned_themes(aligned_themes: pd.DataFrame):
+        """Transpose topics for increased legibility."""
+        transposed_df = pd.DataFrame(
+            [aligned_themes["topic"].to_numpy()], columns=aligned_themes["topic_id"]
+        )
+        return transposed_df
+
+    aligned_themes = await batch_and_run(
+        refined_themes_df,
+        prompt_template,
+        llm,
+        batch_size=batch_size,
+        question=question,
+        system_prompt=system_prompt,
+        target_n_themes=target_n_themes,
+    )
+    return transpose_aligned_themes(aligned_themes)
 
 
 async def theme_mapping(
