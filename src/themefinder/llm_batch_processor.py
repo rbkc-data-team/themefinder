@@ -174,7 +174,6 @@ def generate_prompts(
         to the prompt template as the 'responses' variable.
     """
     batched_prompts = []
-
     for df in response_dfs:
         prompt = prompt_template.format(
             responses=df.to_dict(orient="records"), **kwargs
@@ -275,7 +274,7 @@ def check_response_integrity(
     if returned_ids_set != response_ids_set:
         logger.info("Failed integrity check")
         logger.info(
-            f"Present in original but not returned from LLM: {response_ids_set - returned_ids_set}. Returned in LLM but not present in original: {returned_ids_set -response_ids_set}"
+            f"Present in original but not returned from LLM: {response_ids_set - returned_ids_set}. Returned in LLM but not present in original: {returned_ids_set - response_ids_set}"
         )
         return False
     return True

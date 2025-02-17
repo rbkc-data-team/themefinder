@@ -20,6 +20,9 @@ The final output should be in the following JSON format:
     ...
 ]}}
 
+You MUST include every response ID in the output.
+If the response can not be labelled return empty sections where appropriate but you MUST return an entry
+with the correct response ID for each input object
 
 ## EXAMPLE
 Example 1:
