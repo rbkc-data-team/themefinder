@@ -174,9 +174,6 @@ def generate_prompts(
         to the prompt template as the 'responses' variable.
     """
     batched_prompts = []
-
-    response_dfs = [response_df.dropna() for response_df in response_dfs]
-
     for df in response_dfs:
         prompt = prompt_template.format(
             responses=df.to_dict(orient="records"), **kwargs
@@ -234,9 +231,9 @@ async def call_llm(
             if response_id_integrity_check and not check_response_integrity(
                 batch_prompt.response_ids, parsed_response
             ):
-                failed_ids.update(
-                    get_missing_response_ids(batch_prompt.response_ids, parsed_response)
-                )
+                # discard this response but keep track of failed response ids
+                failed_ids.update(batch_prompt.response_ids)
+                return None
 
             return parsed_response
 

@@ -18,7 +18,6 @@ async def find_themes(
     target_n_themes: int | None = None,
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
     verbose: bool = True,
-    include_default_themes: bool = True,
 ) -> dict[str, pd.DataFrame]:
     """Process survey responses through a multi-stage theme analysis pipeline.
 
@@ -40,7 +39,6 @@ async def find_themes(
             Defaults to CONSULTATION_SYSTEM_PROMPT.
         verbose (bool): Whether to show information messages during processing.
             Defaults to True.
-        include_default_themes (bool): Whether to include default themes in the final theme output.
 
     Returns:
         dict[str, pd.DataFrame]: Dictionary containing results from each pipeline stage:
@@ -82,10 +80,6 @@ async def find_themes(
             target_n_themes=target_n_themes,
             system_prompt=system_prompt,
         )
-
-    if include_default_themes:
-        refined_theme_df = add_default_themes(refined_theme_df)
-
     mapping_df = await theme_mapping(
         sentiment_df,
         llm,
@@ -441,28 +435,3 @@ async def theme_mapping(
         response_id_integrity_check=True,
         system_prompt=system_prompt,
     )
-
-
-def add_default_themes(refined_themes_df):
-    """Add default themes to the refined themes DataFrame.
-
-    Args:
-        refined_themes_df (pd.DataFrame): DataFrame containing the initial refined themes.
-
-    Returns:
-        pd.DataFrame: DataFrame containing the refined themes with default themes added.
-    """
-
-    no_reason_given_theme = "No Reason Given: The responses gave no clear reason for the views expressed, or the themes were not clearly articulated in the responses."
-    other_theme = (
-        "Other: The responses contained themes not covered by the existing categories."
-    )
-
-    current_number_of_themes = refined_themes_df.shape[1]
-    alphabetical_label_1 = chr(65 + current_number_of_themes)
-    alphabetical_label_2 = chr(65 + current_number_of_themes + 1)
-
-    refined_themes_df[alphabetical_label_1] = no_reason_given_theme
-    refined_themes_df[alphabetical_label_2] = other_theme
-
-    return refined_themes_df
