@@ -175,7 +175,7 @@ def generate_prompts(
     """
     batched_prompts = []
 
-    response_dfs = response_dfs.dropna()
+    response_dfs = [response_df.dropna() for response_df in response_dfs]
 
     for df in response_dfs:
         prompt = prompt_template.format(
