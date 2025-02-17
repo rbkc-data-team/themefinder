@@ -175,6 +175,8 @@ def generate_prompts(
     """
     batched_prompts = []
 
+    response_dfs = response_dfs.dropna()
+
     for df in response_dfs:
         prompt = prompt_template.format(
             responses=df.to_dict(orient="records"), **kwargs
@@ -232,9 +234,9 @@ async def call_llm(
             if response_id_integrity_check and not check_response_integrity(
                 batch_prompt.response_ids, parsed_response
             ):
-                # discard this response but keep track of failed response ids
-                failed_ids.update(batch_prompt.response_ids)
-                return None
+                failed_ids.update(
+                    get_missing_response_ids(batch_prompt.response_ids, parsed_response)
+                )
 
             return parsed_response
 
@@ -275,10 +277,38 @@ def check_response_integrity(
     if returned_ids_set != response_ids_set:
         logger.info("Failed integrity check")
         logger.info(
-            f"Present in original but not returned from LLM: {response_ids_set - returned_ids_set}. Returned in LLM but not present in original: {returned_ids_set -response_ids_set}"
+            f"Present in original but not returned from LLM: {response_ids_set - returned_ids_set}. Returned in LLM but not present in original: {returned_ids_set - response_ids_set}"
         )
         return False
     return True
+
+
+def get_missing_response_ids(
+    input_response_ids: set[str], parsed_response: dict
+) -> set[str]:
+    """Get the set of response IDs that are missing from the LLM's parsed response.
+
+    Args:
+        input_response_ids (set[str]): Set of response IDs that were included in the
+            original prompt sent to the LLM.
+        parsed_response (dict): Parsed response from the LLM containing a 'responses' key
+            with a list of dictionaries, each containing a 'response_id' field.
+
+    Returns:
+        set[str]: Set of response IDs that are missing from the LLM's parsed response.
+    """
+
+    response_ids_set = set(input_response_ids)
+
+    returned_ids_set = {
+        str(
+            element["response_id"]
+        )  # treat ids as strings to match response_ids_in_each_prompt
+        for element in parsed_response["responses"]
+        if element.get("response_id", False)
+    }
+    missing_response_ids = response_ids_set - returned_ids_set
+    return missing_response_ids
 
 
 def process_llm_responses(

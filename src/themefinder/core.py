@@ -18,6 +18,7 @@ async def find_themes(
     target_n_themes: int | None = None,
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
     verbose: bool = True,
+    include_default_themes: bool = True,
 ) -> dict[str, pd.DataFrame]:
     """Process survey responses through a multi-stage theme analysis pipeline.
 
@@ -80,6 +81,10 @@ async def find_themes(
             target_n_themes=target_n_themes,
             system_prompt=system_prompt,
         )
+
+    if include_default_themes:
+        refined_theme_df = add_default_themes(refined_theme_df)
+
     mapping_df = await theme_mapping(
         sentiment_df,
         llm,
@@ -106,7 +111,7 @@ async def sentiment_analysis(
     responses_df: pd.DataFrame,
     llm: Runnable,
     question: str,
-    batch_size: int = 10,
+    batch_size: int = 20,
     prompt_template: str | Path | PromptTemplate = "sentiment_analysis",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
 ) -> pd.DataFrame:
@@ -121,7 +126,7 @@ async def sentiment_analysis(
         llm (Runnable): Language model instance to use for sentiment analysis.
         question (str): The survey question.
         batch_size (int, optional): Number of responses to process in each batch.
-            Defaults to 10.
+            Defaults to 20.
         prompt_template (str | Path | PromptTemplate, optional): Template for structuring
             the prompt to the LLM. Can be a string identifier, path to template file,
             or PromptTemplate instance. Defaults to "sentiment_analysis".
@@ -435,3 +440,28 @@ async def theme_mapping(
         response_id_integrity_check=True,
         system_prompt=system_prompt,
     )
+
+
+def add_default_themes(refined_themes_df):
+    """Add default themes to the refined themes DataFrame.
+
+    Args:
+        refined_themes_df (pd.DataFrame): DataFrame containing the initial refined themes.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the refined themes with default themes added.
+    """
+
+    no_reason_given_theme = "No Reason Given: The responses gave no clear reason for the views expressed, or the themes were not clearly articulated in the responses."
+    other_theme = (
+        "Other: The responses contained themes not covered by the existing categories."
+    )
+
+    current_number_of_themes = refined_themes_df.shape[1]
+    alphabetical_label_1 = chr(65 + current_number_of_themes)
+    alphabetical_label_2 = chr(65 + current_number_of_themes + 1)
+
+    refined_themes_df[alphabetical_label_1] = no_reason_given_theme
+    refined_themes_df[alphabetical_label_2] = other_theme
+
+    return refined_themes_df
