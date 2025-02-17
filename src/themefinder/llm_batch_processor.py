@@ -279,35 +279,6 @@ def check_response_integrity(
         return False
     return True
 
-
-def get_missing_response_ids(
-    input_response_ids: set[str], parsed_response: dict
-) -> set[str]:
-    """Get the set of response IDs that are missing from the LLM's parsed response.
-
-    Args:
-        input_response_ids (set[str]): Set of response IDs that were included in the
-            original prompt sent to the LLM.
-        parsed_response (dict): Parsed response from the LLM containing a 'responses' key
-            with a list of dictionaries, each containing a 'response_id' field.
-
-    Returns:
-        set[str]: Set of response IDs that are missing from the LLM's parsed response.
-    """
-
-    response_ids_set = set(input_response_ids)
-
-    returned_ids_set = {
-        str(
-            element["response_id"]
-        )  # treat ids as strings to match response_ids_in_each_prompt
-        for element in parsed_response["responses"]
-        if element.get("response_id", False)
-    }
-    missing_response_ids = response_ids_set - returned_ids_set
-    return missing_response_ids
-
-
 def process_llm_responses(
     llm_responses: list[dict[str, Any]], responses: pd.DataFrame
 ) -> pd.DataFrame:
