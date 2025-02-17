@@ -40,6 +40,7 @@ async def find_themes(
             Defaults to CONSULTATION_SYSTEM_PROMPT.
         verbose (bool): Whether to show information messages during processing.
             Defaults to True.
+        include_default_themes (bool): Whether to include default themes in the final theme output.
 
     Returns:
         dict[str, pd.DataFrame]: Dictionary containing results from each pipeline stage:
