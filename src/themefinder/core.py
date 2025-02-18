@@ -95,7 +95,7 @@ async def find_themes(
     return {
         "question": question,
         "sentiment": sentiment_df,
-        "topics": theme_df,
+        "themes": theme_df,
         "condensed_themes": condensed_theme_df,
         "refined_themes": refined_theme_df,
         "mapping": mapping_df,
@@ -224,7 +224,7 @@ async def theme_condensation(
         pd.DataFrame: DataFrame containing the condensed themes, where similar topics
             have been combined into broader categories.
     """
-    logger.info(f"Running theme condensation on {len(themes_df)} responses")
+    logger.info(f"Running theme condensation on {len(themes_df)} themes")
     themes_df["response_id"] = range(len(themes_df))
 
     n_themes = themes_df.shape[0]
