@@ -95,7 +95,7 @@ async def find_themes(
     return {
         "question": question,
         "sentiment": sentiment_df,
-        "topics": theme_df,
+        "themes": theme_df,
         "condensed_themes": condensed_theme_df,
         "refined_themes": refined_theme_df,
         "mapping": mapping_df,
@@ -106,7 +106,7 @@ async def sentiment_analysis(
     responses_df: pd.DataFrame,
     llm: Runnable,
     question: str,
-    batch_size: int = 10,
+    batch_size: int = 20,
     prompt_template: str | Path | PromptTemplate = "sentiment_analysis",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
 ) -> pd.DataFrame:
@@ -121,7 +121,7 @@ async def sentiment_analysis(
         llm (Runnable): Language model instance to use for sentiment analysis.
         question (str): The survey question.
         batch_size (int, optional): Number of responses to process in each batch.
-            Defaults to 10.
+            Defaults to 20.
         prompt_template (str | Path | PromptTemplate, optional): Template for structuring
             the prompt to the LLM. Can be a string identifier, path to template file,
             or PromptTemplate instance. Defaults to "sentiment_analysis".
@@ -224,7 +224,7 @@ async def theme_condensation(
         pd.DataFrame: DataFrame containing the condensed themes, where similar topics
             have been combined into broader categories.
     """
-    logger.info(f"Running theme condensation on {len(themes_df)} responses")
+    logger.info(f"Running theme condensation on {len(themes_df)} themes")
     themes_df["response_id"] = range(len(themes_df))
 
     n_themes = themes_df.shape[0]

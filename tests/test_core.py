@@ -48,7 +48,7 @@ async def test_find_themes(mock_llm, sample_df):
         key in result
         for key in [
             "sentiment",
-            "topics",
+            "themes",
             "condensed_themes",
             "mapping",
             "question",
