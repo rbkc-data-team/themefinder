@@ -68,3 +68,37 @@ poetry run mkdocs serve
 and go to [http://127.0.0.1:8000/i-dot-ai/themefinder/](http://127.0.0.1:8000/i-dot-ai/themefinder/) in the browser.
 
 
+## Langfuse integration
+
+Langfuse can be used to monitor costs and log LLM calls. This can be initialised from outside of the ThemeFinder package when the LLM is instantiated. 
+
+Set up:
+Add to the `.env` file:
+```
+# Langfuse
+LANGFUSE_SECRET_KEY=""
+LANGFUSE_PUBLIC_KEY=""
+LANGFUSE_HOST=""
+```
+using the keys from you own langfuse instance.
+
+```python
+from langfuse import Langfuse
+from langfuse.callback import CallbackHandler
+ 
+dotenv.load_dotenv() 
+
+# Initialize Langfuse CallbackHandler for Langchain (tracing)
+# Use the session id to group calls
+langfuse_callback_handler = CallbackHandler(session_id="run_1")
+
+# Initialise your LLM of choice using langchain
+llm = AzureChatOpenAI(
+    model="gpt-4o",
+    temperature=0,
+    callbacks=[langfuse_callback_handler],
+    model_kwargs={"response_format": {"type": "json_object"}},
+)
+```
+
+Use as you would normally. Your langfuse dashboard should log the llm calls including the inputs, outputs, model name, costs, and more.
