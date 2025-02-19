@@ -70,7 +70,7 @@ and go to [http://127.0.0.1:8000/i-dot-ai/themefinder/](http://127.0.0.1:8000/i-
 
 ## Langfuse integration
 
-Langfuse can be used to monitor costs and log LLM calls. This can be initialised from outside of the ThemeFinder package when the LLM is instanced. 
+Langfuse can be used to monitor costs and log LLM calls. This can be initialised from outside of the ThemeFinder package when the LLM is instantiated. 
 
 Set up:
 Add to the `.env` file:
