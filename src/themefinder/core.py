@@ -197,7 +197,7 @@ async def theme_condensation(
     themes_df: pd.DataFrame,
     llm: Runnable,
     question: str,
-    batch_size: int = 100,
+    batch_size: int = 75,
     prompt_template: str | Path | PromptTemplate = "theme_condensation",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
     **kwargs,
