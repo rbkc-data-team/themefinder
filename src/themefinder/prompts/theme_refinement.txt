@@ -53,9 +53,9 @@ You will produce a list of NEUTRAL TOPICS based on the input. Each neutral topic
 Return your output in the following JSON format:
 {{
    "responses": [
-       {{"topic_id": "A", "topic": "{{topic label 1}}: {{topic description 1}}"}},
-       {{"topic_id": "B", "topic": "{{topic label 2}}: {{topic description 2}}"}},
-       {{"topic_id": "C", "topic": "{{topic label 3}}: {{topic description 3}}"}},
+       {{"topic_id": "A", "topic": "{{topic label 1}}: {{topic description 1}}", "source_topic_count": {{count1}}}},
+       {{"topic_id": "B", "topic": "{{topic label 2}}: {{topic description 2}}", "source_topic_count": {{count2}}}},
+       {{"topic_id": "C", "topic": "{{topic label 3}}: {{topic description 3}}", "source_topic_count": {{count3}}}},
       // Additional topics as necessary
    ]
 }}
@@ -64,11 +64,14 @@ Return your output in the following JSON format:
 ## EXAMPLE
 
 OPINIONATED TOPIC:
-"Economic impact: Many respondents who support the policy believe it will create jobs and boost the economy, it could raise GDP by 2%."
+"Economic impact: Many respondents who support the policy believe it will create jobs and boost the economy, it could raise GDP by 2%. [source_topic_count: 15]"
 
 NEUTRAL TOPIC:
-Topic Label: Economic Impact on Employment
-Description: The policy's potential effects on job creation and overall economic growth, including potential for a 2% increase in GDP.
+{{
+  "topic_id": "A",
+  "topic": "Economic Impact on Employment: The policy's potential effects on job creation and overall economic growth, including potential for a 2% increase in GDP.",
+  "source_topic_count": 15
+}}
 
 Remember, your goal is to create a list of neutral, informative, and distinct topics that accurately represent the content of the original opinionated topics without any bias or references to responses.
 
