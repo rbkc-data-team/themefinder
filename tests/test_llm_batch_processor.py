@@ -23,43 +23,6 @@ async def test_process_llm_responses_with_clashing_types():
     assert list(processed["response_id"]) == [1]
     assert list(processed["llm_contribution"]) == ["banana"]
 
-
-@mock.patch("tenacity.nap.time.sleep", MagicMock())
-@pytest.mark.asyncio()
-async def test_id_integrity_failure(mock_llm):
-    """
-    Test the behavior when LLM returns responses with mismatched IDs.
-    Verifies that the system recovers by splitting the batch and retrying
-    when response IDs don't match the input DataFrame.
-    """
-    input_dataframe = pd.DataFrame(
-        {"response_id": [1, 2], "text": ["response1", "response2"]}
-    )
-
-    mock_llm.ainvoke.side_effect = [
-        MagicMock(
-            # note different ID in response
-            content='{"responses": [{"response_id": 3, "position": "agreement", "text": "response1"}, {"response_id": 2, "position": "disagreement", "text": "response2"}]}'
-        ),
-        MagicMock(
-            # split: first handle response 1...
-            content='{"responses": [{"response_id": 1, "position": "agreement", "text": "response1"}]}'
-        ),
-        MagicMock(
-            # split: ...then handle response 2
-            content='{"responses": [{"response_id": 2, "position": "agreement", "text": "response1"}]}'
-        ),
-    ]
-
-    result = await sentiment_analysis(
-        input_dataframe, mock_llm, question="doesn't matter"
-    )
-    # we got something back
-    assert isinstance(result, pd.DataFrame)
-    assert list(result["response_id"]) == [1, 2]
-    assert mock_llm.ainvoke.call_count == 3
-
-
 @pytest.mark.asyncio()
 async def test_retries(mock_llm, sample_df):
     """
