@@ -239,6 +239,7 @@ async def theme_condensation(
             batch_size=batch_size,
             question=question,
             system_prompt=system_prompt,
+            response_id_integrity_check=False,
             **kwargs,
         )
         themes_df = themes_df.sample(frac=1).reset_index(drop=True)

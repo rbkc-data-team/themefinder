@@ -52,14 +52,16 @@ async def batch_and_run(
     """
     logger.info(f"Running batch and run with batch size {batch_size}")
     prompt_template = convert_to_prompt_template(prompt_template)
-    batch_prompts = generate_prompts(prompt_template, responses_df, **kwargs)
+    batch_prompts = generate_prompts(
+        prompt_template, responses_df, batch_size=batch_size, **kwargs
+    )
     llm_responses, failed_ids = await call_llm(
         batch_prompts=batch_prompts,
         llm=llm,
         response_id_integrity_check=response_id_integrity_check,
     )
     processed_responses = process_llm_responses(llm_responses, responses_df)
-    if failed_ids:
+    if failed_ids and response_id_integrity_check:
         new_df = responses_df[responses_df["response_id"].astype(str).isin(failed_ids)]
         processed_failed_responses = await batch_and_run(
             responses_df=new_df,
@@ -67,6 +69,7 @@ async def batch_and_run(
             llm=llm,
             batch_size=1,
             partition_key=partition_key,
+            response_id_integrity_check=False,
             **kwargs,
         )
         return pd.concat(objs=[processed_failed_responses, processed_responses])
@@ -271,7 +274,6 @@ async def call_llm(
         - Concurrency is managed via asyncio.Semaphore to prevent overwhelming the LLM
     """
     semaphore = asyncio.Semaphore(concurrency)
-    failed_ids: set = set()
 
     @retry(
         wait=wait_random_exponential(min=1, max=20),
@@ -283,22 +285,31 @@ async def call_llm(
         async with semaphore:
             response = await llm.ainvoke(batch_prompt.prompt_string)
             parsed_response = json.loads(response.content)
+            failed_ids: set = set()
 
             if response_id_integrity_check and not check_response_integrity(
                 batch_prompt.response_ids, parsed_response
             ):
                 # discard this response but keep track of failed response ids
                 failed_ids.update(batch_prompt.response_ids)
-                return None
+                return {"response": None, "failed_ids": failed_ids}
 
-            return parsed_response
+            return {"response": parsed_response, "failed_ids": failed_ids}
 
     results = await asyncio.gather(
         *[async_llm_call(batch_prompt) for batch_prompt in batch_prompts]
     )
+
+    # Extract responses
     successful_responses = [
-        r for r in results if r is not None
+        r["response"] for r in results if r["response"] is not None
     ]  # ignore discarded responses
+
+    # Extract failed ids
+    failed_ids: set = set()
+    for r in results:
+        if r["response"] is None:
+            failed_ids.update(r["failed_ids"])
     return (successful_responses, failed_ids)
 
 
