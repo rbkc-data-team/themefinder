@@ -103,26 +103,46 @@ async def test_theme_generation(mock_llm, sample_sentiment_df):
 @pytest.mark.asyncio
 async def test_theme_condensation(mock_llm):
     """Test theme condensation with mocked LLM responses."""
-    initial_df = pd.DataFrame({"theme": [f"theme{i}" for i in range(1, 6)]})
+    # Initial_df has 4 themes. Batch size is 2 so it will need to condense in two batches.
+    initial_df = pd.DataFrame({"theme": [f"theme{i}" for i in range(1, 5)]})
     mock_llm.ainvoke.side_effect = [
-        MagicMock(
-            content=json.dumps(
-                {"responses": [{"theme": "A"}, {"theme": "B"}, {"theme": "C"}]}
-            )
-        ),
-        MagicMock(
-            content=json.dumps(
-                {"responses": [{"theme": "A"}, {"theme": "B"}, {"theme": "C"}]}
-            )
-        ),
-        MagicMock(content=json.dumps({"responses": [{"theme": "A"}, {"theme": "B"}]})),
+        # Each batch of two condenses to 1 which is under the batch size.
+        MagicMock(content=json.dumps({"responses": [{"theme": "A"}]})),
+        MagicMock(content=json.dumps({"responses": [{"theme": "B"}]})),
+        # Final condesation goes down to 1.
+        MagicMock(content=json.dumps({"responses": [{"theme": "A"}]})),
     ]
     result = await theme_condensation(
         initial_df, mock_llm, question="test question", batch_size=2
     )
+
     assert isinstance(result, pd.DataFrame)
     assert "theme" in result.columns
+    assert len(result) == 1
     assert mock_llm.ainvoke.call_count == 3
+
+
+@pytest.mark.asyncio
+async def test_theme_condensation_when_condensation_stops(mock_llm):
+    """Test theme condensation with mocked LLM responses."""
+    # Initial_df has 4 themes. Batch size is 2 so it will need to condense in two batches.
+    initial_df = pd.DataFrame({"theme": [f"theme{i}" for i in range(1, 5)]})
+    mock_llm.ainvoke.side_effect = [
+        # Each batch of two doesn't condense.
+        MagicMock(content=json.dumps({"responses": [{"theme": "A"}, {"theme": "B"}]})),
+        MagicMock(content=json.dumps({"responses": [{"theme": "C"}, {"theme": "D"}]})),
+        # This should trigger the final attempt (which has two batches as it is still at 4)
+        MagicMock(content=json.dumps({"responses": [{"theme": "A"}, {"theme": "B"}]})),
+        MagicMock(content=json.dumps({"responses": [{"theme": "C"}, {"theme": "D"}]})),
+    ]
+    result = await theme_condensation(
+        initial_df, mock_llm, question="test question", batch_size=2
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert "theme" in result.columns
+    assert len(result) == 4
+    assert mock_llm.ainvoke.call_count == 4
 
 
 @pytest.mark.asyncio
