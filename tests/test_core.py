@@ -6,6 +6,7 @@ import pytest
 from langchain_core.prompts import PromptTemplate
 
 from themefinder import (
+    find_themes,
     sentiment_analysis,
     theme_condensation,
     theme_generation,
@@ -217,3 +218,76 @@ async def test_theme_mapping(mock_llm, sample_sentiment_df):
     assert "reason" in result.columns
     assert "label" in result.columns
     assert mock_llm.ainvoke.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_find_themes(monkeypatch):
+    # Dummy async functions returning simple DataFrames
+    async def dummy_sentiment_analysis(responses_df, llm, question, system_prompt):
+        return pd.DataFrame({"sentiment": ["positive"]})
+
+    async def dummy_theme_generation(sentiment_df, llm, question, system_prompt):
+        return pd.DataFrame({"theme": ["theme1"]})
+
+    async def dummy_theme_condensation(theme_df, llm, question, system_prompt):
+        return pd.DataFrame({"condensed_theme": ["condensed_theme1"]})
+
+    async def dummy_theme_refinement(condensed_theme_df, llm, question, system_prompt):
+        return pd.DataFrame({"refined_theme": ["refined_theme1"]})
+
+    async def dummy_theme_target_alignment(
+        refined_theme_df, llm, question, target_n_themes, system_prompt
+    ):
+        return pd.DataFrame({"refined_theme": [f"aligned_theme_for_{target_n_themes}"]})
+
+    async def dummy_theme_mapping(
+        sentiment_df, llm, question, refined_themes_df, system_prompt
+    ):
+        return pd.DataFrame({"mapping": ["mapped_theme1"]})
+
+    # Patch the internal functions so that find_themes uses the dummy versions.
+    monkeypatch.setattr("themefinder.core.sentiment_analysis", dummy_sentiment_analysis)
+    monkeypatch.setattr("themefinder.core.theme_generation", dummy_theme_generation)
+    monkeypatch.setattr("themefinder.core.theme_condensation", dummy_theme_condensation)
+    monkeypatch.setattr("themefinder.core.theme_refinement", dummy_theme_refinement)
+    monkeypatch.setattr(
+        "themefinder.core.theme_target_alignment", dummy_theme_target_alignment
+    )
+    monkeypatch.setattr("themefinder.core.theme_mapping", dummy_theme_mapping)
+
+    # Prepare a dummy responses DataFrame and parameters.
+    responses_df = pd.DataFrame({"response": ["This is a test response"]})
+    dummy_llm = object()  # Dummy LLM; our dummy functions don't depend on it.
+    question = "Test question"
+    target_n_themes = 3
+    system_prompt = "Dummy system prompt"
+    verbose = False
+
+    result = await find_themes(
+        responses_df,
+        dummy_llm,
+        question,
+        target_n_themes=target_n_themes,
+        system_prompt=system_prompt,
+        verbose=verbose,
+    )
+
+    # Verify that the returned dictionary contains the expected keys.
+    expected_keys = {
+        "question",
+        "sentiment",
+        "themes",
+        "condensed_themes",
+        "refined_themes",
+        "mapping",
+    }
+    assert set(result.keys()) == expected_keys
+
+    # Check that the question is correctly passed through.
+    assert result["question"] == question
+
+    # Verify that each stage returns a DataFrame with content.
+    for key in ["sentiment", "themes", "condensed_themes", "refined_themes", "mapping"]:
+        df = result[key]
+        assert isinstance(df, pd.DataFrame)
+        assert not df.empty

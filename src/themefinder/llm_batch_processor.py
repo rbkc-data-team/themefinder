@@ -3,7 +3,7 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 import tiktoken
@@ -118,82 +118,67 @@ def convert_to_prompt_template(prompt_template: str | Path | PromptTemplate):
     return template
 
 
+def partition_dataframe(
+    df: pd.DataFrame, partition_key: Optional[str]
+) -> list[pd.DataFrame]:
+    """Splits the DataFrame into partitions based on the partition_key if provided."""
+    if partition_key:
+        return [group.reset_index(drop=True) for _, group in df.groupby(partition_key)]
+    return [df]
+
+
 def batch_task_input_df(
     df: pd.DataFrame,
     allowed_tokens: int,
     batch_size: int,
-    partition_key: str | None = None,
+    partition_key: Optional[str] = None,
 ) -> list[pd.DataFrame]:
     """
-    Splits the input DataFrame into batches based on a token limit and a maximum row count.
+    Splits the input DataFrame into batches where each batch's token count (when converted to JSON)
+    does not exceed allowed_tokens and contains at most batch_size rows.
 
-    This function first partitions the DataFrame by the specified partition key (if provided).
-    For each partition (or the entire DataFrame if no partition key is given), it checks the token count
-    of a sample batch (up to 'batch_size' rows) by converting it to JSON. If the token count for the sample
-    batch is within the allowed limit, the partition is simply split into batches of at most 'batch_size' rows.
-    Otherwise, the function accumulates rows iteratively, ensuring that adding each row does not exceed the
-    allowed token limit or the maximum row count.
-
-    Args:
-        df (pd.DataFrame): The input DataFrame containing response data.
-        allowed_tokens (int): The maximum allowed token count for each batch.
-        batch_size (int): The maximum number of rows to include in each batch.
-        partition_key (str | None, optional): Column name used to partition the DataFrame. If provided, the DataFrame
-            is grouped by this key and each group is batched separately. Defaults to None.
-
-    Returns:
-        list[pd.DataFrame]: A list of DataFrame batches, each of which satisfies both the token limit and the maximum
-        row count constraints.
+    Each row is evaluated and accumulated into a batch until adding another row would exceed the
+    allowed token limit or the batch size. Rows that individually exceed allowed_tokens are excluded.
     """
     batches = []
-
-    partitions = (
-        [group.reset_index(drop=True) for _, group in df.groupby(partition_key)]
-        if partition_key
-        else [df]
-    )
+    partitions = partition_dataframe(df, partition_key)
 
     for partition in partitions:
-        sample_batch = partition.iloc[:batch_size]
-        sample_token_count = calculate_string_token_length(sample_batch.to_json())
+        # Precompute token counts for each row to simplify the iteration logic.
+        token_counts = partition.apply(
+            lambda row: calculate_string_token_length(row.to_json()), axis=1
+        ).tolist()
 
-        if sample_token_count <= allowed_tokens:
-            batches.extend(
-                [
-                    partition.iloc[i : i + batch_size].reset_index(drop=True)
-                    for i in range(0, len(partition), batch_size)
-                ]
-            )
-        else:
-            current_indexes = []
-            current_token_count = 0
+        current_batch_indexes = []
+        current_token_sum = 0
 
-            for idx, row in partition.iterrows():
-                row_str = row.to_json()
-                token_count = calculate_string_token_length(row_str)
+        for i, (original_idx, row) in enumerate(partition.iterrows()):
+            token_count = token_counts[i]
 
-                if token_count > allowed_tokens:
-                    logging.warning(
-                        f"Row at index {idx} exceeds allowed token limit ({token_count} > {allowed_tokens}). Excluding response."
+            if token_count > allowed_tokens:
+                logging.warning(
+                    f"Row at index {original_idx} exceeds allowed token limit ({token_count} > {allowed_tokens}). Excluding row."
+                )
+                continue  # Skip rows that are too heavy on their own.
+
+            # If adding this row would exceed token limit or max rows in batch, start a new batch.
+            if (
+                current_token_sum + token_count > allowed_tokens
+                or len(current_batch_indexes) >= batch_size
+            ):
+                if current_batch_indexes:
+                    batches.append(
+                        partition.iloc[current_batch_indexes].reset_index(drop=True)
                     )
-                    continue
+                current_batch_indexes = [i]
+                current_token_sum = token_count
+            else:
+                current_batch_indexes.append(i)
+                current_token_sum += token_count
 
-                if (
-                    current_token_count + token_count > allowed_tokens
-                    or len(current_indexes) >= batch_size
-                ):
-                    if current_indexes:
-                        batches.append(
-                            partition.loc[current_indexes].reset_index(drop=True)
-                        )
-                    current_indexes = [idx]
-                    current_token_count = token_count
-                else:
-                    current_indexes.append(idx)
-                    current_token_count += token_count
-
-            if current_indexes:
-                batches.append(partition.loc[current_indexes].reset_index(drop=True))
+        # Append any remaining rows as the final batch.
+        if current_batch_indexes:
+            batches.append(partition.iloc[current_batch_indexes].reset_index(drop=True))
 
     return batches
 

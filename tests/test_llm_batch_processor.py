@@ -1,3 +1,4 @@
+import json
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -237,6 +238,78 @@ def test_batch_task_input_df_partitioning(monkeypatch):
     ]
     assert sorted(group_a_ids) == [1, 2]
     assert sorted(group_b_ids) == [3, 4]
+
+
+def test_batch_task_input_df_else_branch(monkeypatch):
+    """
+    Test the else branch in the for loop, where rows accumulate normally within token and batch constraints.
+    """
+    monkeypatch.setattr(
+        "themefinder.llm_batch_processor.calculate_string_token_length",
+        dummy_token_length_low,
+    )
+
+    # Create a DataFrame with 4 rows.
+    df = pd.DataFrame({"response_id": [1, 2, 3, 4], "text": ["a", "b", "c", "d"]})
+
+    batch_size = 3  # Allows up to 3 rows in a batch
+    allowed_tokens = 40  # Enough for 4 rows but will split before that
+
+    # Expected behavior:
+    # - The first batch accumulates until 3 rows.
+    # - Since allowed_tokens is not exceeded, the else block executes for rows 2 and 3.
+    # - The last row (4) starts a new batch.
+
+    batches = batch_task_input_df(df, allowed_tokens, batch_size, partition_key=None)
+
+    # Ensure we get two batches
+    assert len(batches) == 2
+    assert batches[0]["response_id"].tolist() == [
+        1,
+        2,
+        3,
+    ]  # Else branch accumulates rows 2 & 3
+    assert batches[1]["response_id"].tolist() == [4]  # New batch starts here
+
+
+def test_exceed_token_limit(monkeypatch, caplog):
+    """
+    Test that rows exceeding the allowed token limit are skipped and a warning is logged.
+    """
+
+    def dummy_token_length_exceed(row_json: str) -> int:
+        # Parse the JSON to reliably check the response_id.
+        data = json.loads(row_json)
+        if data.get("response_id") == 1:
+            return 60  # This exceeds the allowed_tokens value below.
+        return 10  # For all other rows, a normal token count.
+
+    monkeypatch.setattr(
+        "themefinder.llm_batch_processor.calculate_string_token_length",
+        dummy_token_length_exceed,
+    )
+
+    # Create a DataFrame with 3 rows.
+    df = pd.DataFrame({"response_id": [1, 2, 3], "text": ["a", "b", "c"]})
+    allowed_tokens = 50
+    batch_size = 2
+
+    # Run the batching function.
+    batches = batch_task_input_df(df, allowed_tokens, batch_size, partition_key=None)
+
+    # Verify that the row with response_id 1 is excluded.
+    for batch in batches:
+        assert 1 not in batch["response_id"].tolist()
+
+    # Check that a warning was logged regarding the token limit exceeded.
+    warning_messages = [
+        record.message for record in caplog.records if record.levelname == "WARNING"
+    ]
+    assert any("exceeds allowed token limit" in message for message in warning_messages)
+
+    # With response_id 1 excluded, we expect one batch containing rows with response_id 2 and 3.
+    assert len(batches) == 1
+    assert batches[0]["response_id"].tolist() == [2, 3]
 
 
 # Define a dummy calculate_string_token_length that returns a fixed value.
