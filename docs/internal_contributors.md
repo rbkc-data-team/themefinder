@@ -3,6 +3,8 @@
 At present we are not accepting contributions to `themefinder` as it is undergoing rapid development within i.AI. If you have a suggestion, please raise an [issue](https://github.com/i-dot-ai/themefinder/issues), fill in our [feedback form](https://forms.gle/85xUSMvxGzSSKQ499), or email us at [packages@cabinetoffice.gov.uk](mailto:packages@cabinetoffice.gov.uk).
 
 
+## Architecture decisions
+
 ## Developing the package locally
 
 Ensure you have installed `pre-commit` in the repo: `pre-commit install`. This includes hooks to prevent you committing sensitive data. This will not catch everything; always take care when working in the open.
@@ -66,6 +68,13 @@ poetry run mkdocs build
 poetry run mkdocs serve
 ```
 and go to [http://127.0.0.1:8000/i-dot-ai/themefinder/](http://127.0.0.1:8000/i-dot-ai/themefinder/) in the browser.
+
+
+## Architecture decision records (ADR)
+
+If you are making significant changes, please record them in the architecure documents. We are using [adr-tools](https://github.com/npryce/adr-tools) - see the ADR tools repo for how to install and use.
+
+
 
 
 ## Langfuse integration
