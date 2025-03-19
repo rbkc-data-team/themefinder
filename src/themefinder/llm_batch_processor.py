@@ -127,59 +127,62 @@ def partition_dataframe(
     return [df]
 
 
+def split_overflowing_batch(
+    batch: pd.DataFrame, allowed_tokens: int
+) -> list[pd.DataFrame]:
+    sub_batches = []
+    current_indices = []
+    current_token_sum = 0
+    token_counts = batch.apply(
+        lambda row: calculate_string_token_length(row.to_json()), axis=1
+    ).tolist()
+
+    for i, token_count in enumerate(token_counts):
+        if token_count > allowed_tokens:
+            logging.warning(
+                f"Row at index {batch.index[i]} exceeds allowed token limit ({token_count} > {allowed_tokens}). Skipping row."
+            )
+            continue
+
+        if current_token_sum + token_count > allowed_tokens:
+            if current_indices:
+                sub_batch = batch.iloc[current_indices].reset_index(drop=True)
+                if not sub_batch.empty:
+                    sub_batches.append(sub_batch)
+            current_indices = [i]
+            current_token_sum = token_count
+        else:
+            current_indices.append(i)
+            current_token_sum += token_count
+
+    if current_indices:
+        sub_batch = batch.iloc[current_indices].reset_index(drop=True)
+        if not sub_batch.empty:
+            sub_batches.append(sub_batch)
+    return sub_batches
+
+
 def batch_task_input_df(
     df: pd.DataFrame,
     allowed_tokens: int,
     batch_size: int,
     partition_key: Optional[str] = None,
 ) -> list[pd.DataFrame]:
-    """
-    Splits the input DataFrame into batches where each batch's token count (when converted to JSON)
-    does not exceed allowed_tokens and contains at most batch_size rows.
-
-    Each row is evaluated and accumulated into a batch until adding another row would exceed the
-    allowed token limit or the batch size. Rows that individually exceed allowed_tokens are excluded.
-    """
     batches = []
     partitions = partition_dataframe(df, partition_key)
 
     for partition in partitions:
-        # Precompute token counts for each row to simplify the iteration logic.
-        token_counts = partition.apply(
-            lambda row: calculate_string_token_length(row.to_json()), axis=1
-        ).tolist()
-
-        current_batch_indexes = []
-        current_token_sum = 0
-
-        for i, (original_idx, row) in enumerate(partition.iterrows()):
-            token_count = token_counts[i]
-
-            if token_count > allowed_tokens:
-                logging.warning(
-                    f"Row at index {original_idx} exceeds allowed token limit ({token_count} > {allowed_tokens}). Excluding row."
-                )
-                continue  # Skip rows that are too heavy on their own.
-
-            # If adding this row would exceed token limit or max rows in batch, start a new batch.
-            if (
-                current_token_sum + token_count > allowed_tokens
-                or len(current_batch_indexes) >= batch_size
-            ):
-                if current_batch_indexes:
-                    batches.append(
-                        partition.iloc[current_batch_indexes].reset_index(drop=True)
-                    )
-                current_batch_indexes = [i]
-                current_token_sum = token_count
+        partition_batches = [
+            partition.iloc[i : i + batch_size].reset_index(drop=True)
+            for i in range(0, len(partition), batch_size)
+        ]
+        for batch in partition_batches:
+            batch_length = calculate_string_token_length(batch.to_json())
+            if batch_length <= allowed_tokens:
+                batches.append(batch)
             else:
-                current_batch_indexes.append(i)
-                current_token_sum += token_count
-
-        # Append any remaining rows as the final batch.
-        if current_batch_indexes:
-            batches.append(partition.iloc[current_batch_indexes].reset_index(drop=True))
-
+                sub_batches = split_overflowing_batch(batch, allowed_tokens)
+                batches.extend(sub_batches)
     return batches
 
 

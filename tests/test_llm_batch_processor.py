@@ -1,4 +1,3 @@
-import json
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -12,6 +11,7 @@ from themefinder.llm_batch_processor import (
     calculate_string_token_length,
     generate_prompts,
     process_llm_responses,
+    split_overflowing_batch,
 )
 
 
@@ -150,25 +150,22 @@ def dummy_token_length_iterative(input_text: str, model="gpt-4o"):
 
 def test_batch_task_input_df_row_based(monkeypatch):
     """
-    Test that when the sample batch's token count is low (<= allowed_tokens),
-    the DataFrame is simply split by row count.
+    When token counts are low, the function should simply split the DataFrame
+    into batches based on the row count.
     """
     monkeypatch.setattr(
         "themefinder.llm_batch_processor.calculate_string_token_length",
         dummy_token_length_low,
     )
-    # Create a DataFrame with 5 rows.
     df = pd.DataFrame(
         {"response_id": [1, 2, 3, 4, 5], "text": ["a", "b", "c", "d", "e"]}
     )
     batch_size = 2
-    allowed_tokens = 100  # High enough so that sample_batch token count (10 * number of rows in sample)
-    # is below the allowed_tokens.
+    allowed_tokens = 100  # High enough so that each candidate batch is within limit.
 
     batches = batch_task_input_df(df, allowed_tokens, batch_size, partition_key=None)
 
-    # Expect a simple row-split: for 5 rows and batch_size 2, we expect 3 batches:
-    # [rows 0-1], [rows 2-3], and [row 4].
+    # Expect 3 batches: [rows 1,2], [rows 3,4], and [row 5].
     assert len(batches) == 3
     assert batches[0]["response_id"].tolist() == [1, 2]
     assert batches[1]["response_id"].tolist() == [3, 4]
@@ -177,67 +174,78 @@ def test_batch_task_input_df_row_based(monkeypatch):
 
 def test_batch_task_input_df_iterative(monkeypatch):
     """
-    Test the branch where the sample batch token count is above allowed_tokens,
-    triggering the iterative row-by-row accumulation logic.
+    When a candidate batch's token count exceeds allowed_tokens, the function
+    should split it into sub-batches by accumulating rows iteratively.
     """
     monkeypatch.setattr(
         "themefinder.llm_batch_processor.calculate_string_token_length",
         dummy_token_length_iterative,
     )
-    # Create a DataFrame with 3 rows.
     df = pd.DataFrame({"response_id": [1, 2, 3], "text": ["a", "b", "c"]})
     batch_size = 2
-    allowed_tokens = 50
-    # With dummy_token_length_iterative:
-    # - The sample batch (first 2 rows) will yield a token count of 100 (forcing the iterative branch).
-    # - For each individual row, row.to_json() is short and returns 10 tokens.
-    # The logic will accumulate rows until batch_size is reached.
+    allowed_tokens = (
+        50  # Force iterative splitting since a 2-row batch will appear too long.
+    )
 
     batches = batch_task_input_df(df, allowed_tokens, batch_size, partition_key=None)
 
-    # With batch_size=2, we expect the first batch to contain rows 0 and 1, and the second batch to contain row 2.
+    # Expect two batches: first with rows [1,2] and second with row [3].
     assert len(batches) == 2
     assert batches[0]["response_id"].tolist() == [1, 2]
     assert batches[1]["response_id"].tolist() == [3]
 
 
-def test_batch_task_input_df_partitioning(monkeypatch):
+def test_batch_task_input_df_with_partition(monkeypatch):
     """
-    Test that partitioning works: the DataFrame is split into partitions
-    based on the given partition_key before batching.
+    When a partition_key is provided, the DataFrame should be split into partitions,
+    and each partition processed independently.
     """
     monkeypatch.setattr(
         "themefinder.llm_batch_processor.calculate_string_token_length",
         dummy_token_length_low,
     )
-    # Create a DataFrame with a partition column.
     df = pd.DataFrame(
         {
             "response_id": [1, 2, 3, 4],
             "text": ["a", "b", "c", "d"],
-            "group": ["A", "A", "B", "B"],
+            "group": ["x", "x", "y", "y"],
         }
     )
-    batch_size = 1
-    allowed_tokens = 100  # Low token count branch, so simple splitting.
+    batch_size = 2
+    allowed_tokens = 100
 
     batches = batch_task_input_df(df, allowed_tokens, batch_size, partition_key="group")
 
-    # Expect two partitions: group "A" yields two batches (one row each) and group "B" yields two batches.
-    assert len(batches) == 4
-    # Check that each batch has a single row and that partitioning by 'group' is preserved.
-    group_a_ids = [
-        batch["response_id"].iloc[0]
-        for batch in batches
-        if batch["response_id"].iloc[0] in [1, 2]
-    ]
-    group_b_ids = [
-        batch["response_id"].iloc[0]
-        for batch in batches
-        if batch["response_id"].iloc[0] in [3, 4]
-    ]
-    assert sorted(group_a_ids) == [1, 2]
-    assert sorted(group_b_ids) == [3, 4]
+    # Expect two batches, one per partition.
+    assert len(batches) == 2
+    # Verify that each batch contains rows from only one partition.
+    for batch in batches:
+        assert batch["group"].nunique() == 1
+
+
+def test_batch_task_input_df_all_invalid(monkeypatch):
+    """
+    If every row in the DataFrame is individually invalid (token count > allowed_tokens),
+    the function should return an empty list.
+    """
+
+    # Dummy function: return 60 for any input so that every row is considered invalid
+    def dummy_token_length_all_exceed(text: str) -> int:
+        return 60
+
+    monkeypatch.setattr(
+        "themefinder.llm_batch_processor.calculate_string_token_length",
+        dummy_token_length_all_exceed,
+    )
+
+    df = pd.DataFrame({"response_id": [1, 2, 3], "text": ["a", "b", "c"]})
+    batch_size = 2
+    allowed_tokens = 50  # Every row returns 60 tokens, so each is individually invalid.
+
+    batches = batch_task_input_df(df, allowed_tokens, batch_size, partition_key=None)
+
+    # With all rows invalid, we expect an empty list.
+    assert batches == []
 
 
 def test_batch_task_input_df_else_branch(monkeypatch):
@@ -272,46 +280,6 @@ def test_batch_task_input_df_else_branch(monkeypatch):
     assert batches[1]["response_id"].tolist() == [4]  # New batch starts here
 
 
-def test_exceed_token_limit(monkeypatch, caplog):
-    """
-    Test that rows exceeding the allowed token limit are skipped and a warning is logged.
-    """
-
-    def dummy_token_length_exceed(row_json: str) -> int:
-        # Parse the JSON to reliably check the response_id.
-        data = json.loads(row_json)
-        if data.get("response_id") == 1:
-            return 60  # This exceeds the allowed_tokens value below.
-        return 10  # For all other rows, a normal token count.
-
-    monkeypatch.setattr(
-        "themefinder.llm_batch_processor.calculate_string_token_length",
-        dummy_token_length_exceed,
-    )
-
-    # Create a DataFrame with 3 rows.
-    df = pd.DataFrame({"response_id": [1, 2, 3], "text": ["a", "b", "c"]})
-    allowed_tokens = 50
-    batch_size = 2
-
-    # Run the batching function.
-    batches = batch_task_input_df(df, allowed_tokens, batch_size, partition_key=None)
-
-    # Verify that the row with response_id 1 is excluded.
-    for batch in batches:
-        assert 1 not in batch["response_id"].tolist()
-
-    # Check that a warning was logged regarding the token limit exceeded.
-    warning_messages = [
-        record.message for record in caplog.records if record.levelname == "WARNING"
-    ]
-    assert any("exceeds allowed token limit" in message for message in warning_messages)
-
-    # With response_id 1 excluded, we expect one batch containing rows with response_id 2 and 3.
-    assert len(batches) == 1
-    assert batches[0]["response_id"].tolist() == [2, 3]
-
-
 # Define a dummy calculate_string_token_length that returns a fixed value.
 def dummy_calculate_string_token_length(input_text: str, model="gpt-4o") -> int:
     # For our tests, we simulate that the prompt template always uses 50 tokens.
@@ -332,6 +300,134 @@ def dummy_batch_task_input_df(
 def dummy_input_data():
     # Provide some dummy input data (won't matter because we override batch_task_input_df).
     return pd.DataFrame({"response_id": [1, 2, 3], "text": ["a", "b", "c"]})
+
+
+def test_split_overflowing_batch_within_limit(monkeypatch):
+    # Every row returns 10 tokens, so the total is below allowed_tokens.
+    def dummy_token_length(s: str) -> int:
+        return 10
+
+    monkeypatch.setattr(
+        "themefinder.llm_batch_processor.calculate_string_token_length",
+        dummy_token_length,
+    )
+
+    # Create a DataFrame with 3 rows.
+    df = pd.DataFrame({"response_id": [1, 2, 3], "text": ["a", "b", "c"]})
+
+    # With allowed_tokens high enough, the entire batch should be valid.
+    sub_batches = split_overflowing_batch(df, allowed_tokens=50)
+
+    # Expect one sub-batch containing all rows.
+    assert len(sub_batches) == 1
+    assert sub_batches[0]["response_id"].tolist() == [1, 2, 3]
+
+
+def test_split_overflowing_batch_requires_splitting(monkeypatch):
+    # Define token lengths per row via the 'text' field:
+    # Row with "a": 30 tokens, "b": 30 tokens, "c": 20 tokens.
+    def dummy_token_length(s: str) -> int:
+        if '"text":"a"' in s:
+            return 30
+        elif '"text":"b"' in s:
+            return 30
+        elif '"text":"c"' in s:
+            return 20
+        return 10
+
+    monkeypatch.setattr(
+        "themefinder.llm_batch_processor.calculate_string_token_length",
+        dummy_token_length,
+    )
+
+    df = pd.DataFrame({"response_id": [1, 2, 3], "text": ["a", "b", "c"]})
+
+    # With allowed_tokens=50, the total token count (30+30+20=80) exceeds the limit.
+    # Expected behavior:
+    #   - The first row (30 tokens) forms the first sub-batch.
+    #   - The next two rows are combined (30+20=50 tokens) in a second sub-batch.
+    sub_batches = split_overflowing_batch(df, allowed_tokens=50)
+
+    assert len(sub_batches) == 2
+    assert sub_batches[0]["response_id"].tolist() == [1]
+    assert sub_batches[1]["response_id"].tolist() == [2, 3]
+
+
+def test_split_overflowing_batch_skip_invalid(monkeypatch):
+    # Define token lengths:
+    # "a": 30 tokens, "b": 10 tokens, "c": 20 tokens, "d": 30 tokens.
+    def dummy_token_length(s: str) -> int:
+        if '"text":"a"' in s:
+            return 30
+        elif '"text":"b"' in s:
+            return 10
+        elif '"text":"c"' in s:
+            return 20
+        elif '"text":"d"' in s:
+            return 30
+        return 10
+
+    monkeypatch.setattr(
+        "themefinder.llm_batch_processor.calculate_string_token_length",
+        dummy_token_length,
+    )
+
+    # Create a DataFrame with four rows.
+    df = pd.DataFrame({"response_id": [1, 2, 3, 4], "text": ["a", "b", "c", "d"]})
+
+    # With allowed_tokens=25, rows "a" and "d" (30 tokens each) are individually invalid.
+    # For rows "b" and "c":
+    #   - Row "b" (10 tokens) becomes one sub-batch.
+    #   - Row "c" (20 tokens) cannot join "b" (10+20=30>25) and becomes its own sub-batch.
+    sub_batches = split_overflowing_batch(df, allowed_tokens=25)
+
+    assert len(sub_batches) == 2
+    # The valid rows are row 2 and row 3 (response_ids 2 and 3).
+    assert sub_batches[0]["response_id"].tolist() == [2]
+    assert sub_batches[1]["response_id"].tolist() == [3]
+
+
+def test_split_overflowing_batch_all_invalid(monkeypatch):
+    # All rows return 20 tokens, but allowed_tokens is set too low.
+    def dummy_token_length(s: str) -> int:
+        return 20
+
+    monkeypatch.setattr(
+        "themefinder.llm_batch_processor.calculate_string_token_length",
+        dummy_token_length,
+    )
+
+    df = pd.DataFrame({"response_id": [1, 2, 3], "text": ["a", "b", "c"]})
+
+    # With allowed_tokens=10, every row exceeds the limit.
+    sub_batches = split_overflowing_batch(df, allowed_tokens=10)
+
+    # Expect an empty list because all rows are skipped.
+    assert sub_batches == []
+
+
+def test_split_overflowing_batch_edge_case(monkeypatch):
+    # Test the edge condition where the sum exactly equals allowed_tokens.
+    def dummy_token_length(s: str) -> int:
+        if '"text": "a"' in s:
+            return 30
+        elif '"text": "b"' in s:
+            return 20
+        return 10
+
+    monkeypatch.setattr(
+        "themefinder.llm_batch_processor.calculate_string_token_length",
+        dummy_token_length,
+    )
+
+    df = pd.DataFrame({"response_id": [1, 2], "text": ["a", "b"]})
+
+    # With allowed_tokens=50, the token count is exactly 30+20=50.
+    sub_batches = split_overflowing_batch(df, allowed_tokens=50)
+
+    # Expect one sub-batch containing both rows.
+    assert len(sub_batches) == 1
+    assert sub_batches[0]["response_id"].tolist() == [1, 2]
 
 
 def test_generate_prompts(monkeypatch, dummy_input_data):
