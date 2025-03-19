@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
@@ -365,12 +366,9 @@ def process_llm_responses(
     return task_responses
 
 
-def calculate_string_token_length(input_text: str, model: str = "gpt-4o") -> int:
-    """Calculate the number of tokens in a string using a specific model's tokenizer.
-
-    Returns:
-        int: Number of tokens in the string
-    """
+def calculate_string_token_length(input_text: str, model: str = None) -> int:
+    # Use the MODEL_NAME env var if no model is provided; otherwise default to "gpt-4o"
+    model = model or os.environ.get("MODEL_NAME", "gpt-4o")
     tokenizer_encoding = tiktoken.encoding_for_model(model)
     number_of_tokens = len(tokenizer_encoding.encode(input_text))
     return number_of_tokens
