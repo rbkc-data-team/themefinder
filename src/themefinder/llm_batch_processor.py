@@ -430,5 +430,4 @@ def validate_task_data(
             valid.append(record)
         except ValidationError:
             invalid.append(record)
-            print(record)
     return valid, invalid

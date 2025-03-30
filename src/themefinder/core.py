@@ -411,13 +411,23 @@ async def theme_mapping(
     logger.info(
         f"Running theme mapping on {len(responses_df)} responses using {len(refined_themes_df.columns)} themes"
     )
+
+    def transpose_refined_themes(refined_themes: pd.DataFrame):
+        """Transpose topics for increased legibility."""
+        transposed_df = pd.DataFrame(
+            [refined_themes["topic"].to_numpy()], columns=refined_themes["topic_id"]
+        )
+        return transposed_df
+
     return await batch_and_run(
         responses_df,
         prompt_template,
         llm,
         batch_size=batch_size,
         question=question,
-        refined_themes=refined_themes_df.to_dict(orient="records"),
+        refined_themes=transpose_refined_themes(refined_themes_df).to_dict(
+            orient="records"
+        ),
         response_id_integrity_check=True,
         system_prompt=system_prompt,
     )
