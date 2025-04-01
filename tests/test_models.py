@@ -1,17 +1,23 @@
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from themefinder.models import (SentimentAnalysisInput,
-                                SentimentAnalysisOutput,
-                                ThemeCondensationInput,
-                                ThemeCondensationOutput, ThemeGenerationInput,
-                                ThemeGenerationOutput, ThemeMappingOutput,
-                                ThemeMappingResponseInput,
-                                ThemeMappingThemeInput, ThemeRefinementInput,
-                                ThemeRefinementOutput,
-                                validate_mapping_reason_and_stance_lengths,
-                                validate_non_empty_fields, validate_position,
-                                validate_stances)
+from themefinder.models import (
+    SentimentAnalysisInput,
+    SentimentAnalysisOutput,
+    ThemeCondensationInput,
+    ThemeCondensationOutput,
+    ThemeGenerationInput,
+    ThemeGenerationOutput,
+    ThemeMappingOutput,
+    ThemeMappingResponseInput,
+    ThemeMappingThemeInput,
+    ThemeRefinementInput,
+    ThemeRefinementOutput,
+    validate_mapping_reason_and_stance_lengths,
+    validate_non_empty_fields,
+    validate_position,
+    validate_stances,
+)
 
 
 # Helper function to check validation errors
@@ -69,11 +75,13 @@ def test_validate_stances_invalid():
     with pytest.raises(ValueError, match="stances must be one of"):
         validate_stances(model)
 
+
 # The function to be tested
 def validate_mapping_unique_labels(model):
     if len(model.labels) != len(set(model.labels)):
         raise ValueError("'labels' must be unique")
     return model
+
 
 # Test case for valid unique labels
 def test_validate_mapping_unique_labels_valid():
@@ -82,10 +90,11 @@ def test_validate_mapping_unique_labels_valid():
         response="Valid response",
         labels=["label1", "label2", "label3"],
         reasons=["reason1", "reason2", "reason3"],
-        stances=["POSITIVE", "NEGATIVE", "POSITIVE"]
-        )
+        stances=["POSITIVE", "NEGATIVE", "POSITIVE"],
+    )
     # Should not raise an error and return the model itself.
     assert validate_mapping_unique_labels(model) == model
+
 
 # Test case for invalid (duplicate) labels
 def test_validate_mapping_unique_labels_invalid():
@@ -94,8 +103,8 @@ def test_validate_mapping_unique_labels_invalid():
         response="Valid response",
         labels=["label1", "label2", "label1"],
         reasons=["reason1", "reason2", "reason3"],
-        stances=["POSITIVE", "NEGATIVE", "POSITIVE"]
-        )
+        stances=["POSITIVE", "NEGATIVE", "POSITIVE"],
+    )
     with pytest.raises(ValueError, match="'labels' must be unique"):
         validate_mapping_unique_labels(model)
 
