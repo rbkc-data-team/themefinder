@@ -32,6 +32,10 @@ def validate_mapping_reason_and_stance_lengths(model):
         raise ValueError("'stances' must have the same length as 'labels'")
     return model
 
+def validate_mapping_unique_labels(model):
+    if len(model.labels) != len(set(model.labels)):
+        raise ValueError("'labels' must be unique")
+    return model
 
 class SentimentAnalysisInput(BaseModel):
     response_id: int = Field(gt=0)
@@ -159,5 +163,6 @@ class ThemeMappingOutput(BaseModel):
         validate_position(self)
         validate_stances(self)
         validate_mapping_reason_and_stance_lengths(self)
+        validate_mapping_unique_labels(self)
         validate_non_empty_fields(self)
         return self
