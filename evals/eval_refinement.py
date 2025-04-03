@@ -42,7 +42,7 @@ async def evaluate_refinement():
     )
     eval_prompt = read_and_render(
         "refinement_eval.txt",
-        {"original_topics": condensed_themes, "neutral_topics": refined_themes},
+        {"original_topics": condensed_themes, "new_topics": refined_themes},
     )
     response = llm.invoke(eval_prompt)
     print(f"Theme Refinement Eval Results: \n {response.content}")
