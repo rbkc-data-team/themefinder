@@ -33,23 +33,18 @@ async def test_batch_and_run_missing_id(mock_llm):
         # Next 2 are when batch size == 1
         MagicMock(
             content=json.dumps(
-                {"responses": [{"response_id": 1, "position": "positive"}]}
-            )
-        ),
-        MagicMock(
-            content=json.dumps(
                 {"responses": [{"response_id": 2, "position": "negative"}]}
             )
         ),
     ]
-    result = await batch_and_run(
-        responses_df=sample_df,
+    result, failed_df = await batch_and_run(
+        input_df=sample_df,
         prompt_template=PromptTemplate.from_template(
             template="this is a fake template"
         ),
         llm=mock_llm,
         batch_size=2,
-        response_id_integrity_check=True,
+        validation_check=True,
     )
     assert isinstance(result, pd.DataFrame)
     assert "response_id" in result.columns
@@ -57,7 +52,7 @@ async def test_batch_and_run_missing_id(mock_llm):
     assert len(result) == 2
     assert 1 in result["response_id"].to_list()
     assert 2 in result["response_id"].to_list()
-    assert mock_llm.ainvoke.call_count == 3
+    assert mock_llm.ainvoke.call_count == 2
 
 
 async def test_sentiment_analysis(mock_llm, sample_df):
@@ -66,15 +61,17 @@ async def test_sentiment_analysis(mock_llm, sample_df):
         content=json.dumps(
             {
                 "responses": [
-                    {"response_id": 1, "position": "positive"},
-                    {"response_id": 2, "position": "negative"},
+                    {"response_id": 1, "position": "agreement"},
+                    {"response_id": 2, "position": "disagreement"},
                 ]
             }
         )
     )
-    result = await sentiment_analysis(
+    result, _ = await sentiment_analysis(
         sample_df, mock_llm, question="test question", batch_size=2
     )
+    print("result", result)
+    print("failed", _)
     assert isinstance(result, pd.DataFrame)
     assert "position" in result.columns
     assert mock_llm.ainvoke.call_count == 1
@@ -93,12 +90,12 @@ async def test_theme_generation(mock_llm, sample_sentiment_df):
             }
         )
     )
-    result = await theme_generation(
+    result, _ = await theme_generation(
         sample_sentiment_df, mock_llm, question="test question", batch_size=2
     )
     assert isinstance(result, pd.DataFrame)
     assert "themes" in result.columns
-    assert mock_llm.ainvoke.call_count == 1
+    assert mock_llm.ainvoke.call_count == 2
 
 
 @pytest.mark.asyncio
@@ -113,7 +110,7 @@ async def test_theme_condensation(mock_llm):
         # Final condesation goes down to 1.
         MagicMock(content=json.dumps({"responses": [{"theme": "A"}]})),
     ]
-    result = await theme_condensation(
+    result, _ = await theme_condensation(
         initial_df, mock_llm, question="test question", batch_size=2
     )
 
@@ -136,7 +133,7 @@ async def test_theme_condensation_when_condensation_stops(mock_llm):
         MagicMock(content=json.dumps({"responses": [{"theme": "A"}, {"theme": "B"}]})),
         MagicMock(content=json.dumps({"responses": [{"theme": "C"}, {"theme": "D"}]})),
     ]
-    result = await theme_condensation(
+    result, _ = await theme_condensation(
         initial_df, mock_llm, question="test question", batch_size=2
     )
 
@@ -160,7 +157,7 @@ async def test_theme_refinement(mock_llm):
             }
         )
     )
-    result = await theme_refinement(
+    result, _ = await theme_refinement(
         condensed_df, mock_llm, question="test question", batch_size=2
     )
     assert isinstance(result, pd.DataFrame)
@@ -183,7 +180,7 @@ async def test_theme_target_alignment(mock_llm):
             }
         )
     )
-    result = await theme_target_alignment(
+    result, _ = await theme_target_alignment(
         refined_df, mock_llm, question="test question", target_n_themes=2, batch_size=2
     )
     assert isinstance(result, pd.DataFrame)
@@ -200,23 +197,35 @@ async def test_theme_mapping(mock_llm, sample_sentiment_df):
         content=json.dumps(
             {
                 "responses": [
-                    {"response_id": 1, "reason": ["reason1"], "label": ["label1"]},
-                    {"response_id": 2, "reason": ["reason2"], "label": ["label2"]},
+                    {
+                        "response_id": 1,
+                        "reasons": ["reason1"],
+                        "labels": ["label1"],
+                        "stances": ["POSITIVE"],
+                    },
+                    {
+                        "response_id": 2,
+                        "reasons": ["reason2"],
+                        "labels": ["label2"],
+                        "stances": ["NEGATIVE"],
+                    },
                 ]
             }
         )
     )
-    result = await theme_mapping(
+    result, failed_ids = await theme_mapping(
         sample_sentiment_df,
         mock_llm,
         question="test question",
         refined_themes_df=refined_df,
         batch_size=2,
     )
+    print("TM result", result)
     assert isinstance(result, pd.DataFrame)
     assert "response_id" in result.columns
-    assert "reason" in result.columns
-    assert "label" in result.columns
+    assert "reasons" in result.columns
+    assert "labels" in result.columns
+    assert "stances" in result.columns
     assert mock_llm.ainvoke.call_count == 1
 
 
@@ -224,26 +233,28 @@ async def test_theme_mapping(mock_llm, sample_sentiment_df):
 async def test_find_themes(monkeypatch):
     # Dummy async functions returning simple DataFrames
     async def dummy_sentiment_analysis(responses_df, llm, question, system_prompt):
-        return pd.DataFrame({"sentiment": ["positive"]})
+        return pd.DataFrame({"sentiment": ["positive"]}), pd.DataFrame()
 
     async def dummy_theme_generation(sentiment_df, llm, question, system_prompt):
-        return pd.DataFrame({"theme": ["theme1"]})
+        return pd.DataFrame({"theme": ["theme1"]}), pd.DataFrame()
 
     async def dummy_theme_condensation(theme_df, llm, question, system_prompt):
-        return pd.DataFrame({"condensed_theme": ["condensed_theme1"]})
+        return pd.DataFrame({"condensed_theme": ["condensed_theme1"]}), pd.DataFrame()
 
     async def dummy_theme_refinement(condensed_theme_df, llm, question, system_prompt):
-        return pd.DataFrame({"refined_theme": ["refined_theme1"]})
+        return pd.DataFrame({"refined_theme": ["refined_theme1"]}), pd.DataFrame()
 
     async def dummy_theme_target_alignment(
         refined_theme_df, llm, question, target_n_themes, system_prompt
     ):
-        return pd.DataFrame({"refined_theme": [f"aligned_theme_for_{target_n_themes}"]})
+        return pd.DataFrame(
+            {"refined_theme": [f"aligned_theme_for_{target_n_themes}"]}
+        ), pd.DataFrame()
 
     async def dummy_theme_mapping(
         sentiment_df, llm, question, refined_themes_df, system_prompt
     ):
-        return pd.DataFrame({"mapping": ["mapped_theme1"]})
+        return pd.DataFrame({"mapping": ["mapped_theme1"]}), pd.DataFrame()
 
     # Patch the internal functions so that find_themes uses the dummy versions.
     monkeypatch.setattr("themefinder.core.sentiment_analysis", dummy_sentiment_analysis)
@@ -280,6 +291,7 @@ async def test_find_themes(monkeypatch):
         "condensed_themes",
         "refined_themes",
         "mapping",
+        "unprocessables",
     }
     assert set(result.keys()) == expected_keys
 

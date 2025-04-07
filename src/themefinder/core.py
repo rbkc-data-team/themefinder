@@ -6,6 +6,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import Runnable
 
 from .llm_batch_processor import batch_and_run, load_prompt_from_file
+from .models import SentimentAnalysisOutput, ThemeMappingOutput
 from .themefinder_logging import logger
 
 CONSULTATION_SYSTEM_PROMPT = load_prompt_from_file("consultation_system_prompt")
@@ -51,36 +52,36 @@ async def find_themes(
     """
     logger.setLevel(logging.INFO if verbose else logging.CRITICAL)
 
-    sentiment_df = await sentiment_analysis(
+    sentiment_df, sentiment_unprocessables = await sentiment_analysis(
         responses_df,
         llm,
         question=question,
         system_prompt=system_prompt,
     )
-    theme_df = await theme_generation(
+    theme_df, _ = await theme_generation(
         sentiment_df,
         llm,
         question=question,
         system_prompt=system_prompt,
     )
-    condensed_theme_df = await theme_condensation(
+    condensed_theme_df, _ = await theme_condensation(
         theme_df, llm, question=question, system_prompt=system_prompt
     )
-    refined_theme_df = await theme_refinement(
+    refined_theme_df, _ = await theme_refinement(
         condensed_theme_df,
         llm,
         question=question,
         system_prompt=system_prompt,
     )
     if target_n_themes is not None:
-        refined_theme_df = await theme_target_alignment(
+        refined_theme_df, _ = await theme_target_alignment(
             refined_theme_df,
             llm,
             question=question,
             target_n_themes=target_n_themes,
             system_prompt=system_prompt,
         )
-    mapping_df = await theme_mapping(
+    mapping_df, mapping_unprocessables = await theme_mapping(
         sentiment_df,
         llm,
         question=question,
@@ -99,6 +100,7 @@ async def find_themes(
         "condensed_themes": condensed_theme_df,
         "refined_themes": refined_theme_df,
         "mapping": mapping_df,
+        "unprocessables": pd.concat([sentiment_unprocessables, mapping_unprocessables]),
     }
 
 
@@ -137,15 +139,18 @@ async def sentiment_analysis(
         their original order and association after processing.
     """
     logger.info(f"Running sentiment analysis on {len(responses_df)} responses")
-    return await batch_and_run(
+    processed_rows, unprocessable_rows = await batch_and_run(
         responses_df,
         prompt_template,
         llm,
         batch_size=batch_size,
         question=question,
-        response_id_integrity_check=True,
+        validation_check=True,
+        task_validation_model=SentimentAnalysisOutput,
         system_prompt=system_prompt,
     )
+
+    return processed_rows, unprocessable_rows
 
 
 async def theme_generation(
@@ -182,7 +187,7 @@ async def theme_generation(
         pd.DataFrame: DataFrame containing identified themes and their associated metadata.
     """
     logger.info(f"Running theme generation on {len(responses_df)} responses")
-    return await batch_and_run(
+    generated_themes, _ = await batch_and_run(
         responses_df,
         prompt_template,
         llm,
@@ -191,6 +196,7 @@ async def theme_generation(
         question=question,
         system_prompt=system_prompt,
     )
+    return generated_themes, _
 
 
 async def theme_condensation(
@@ -232,7 +238,7 @@ async def theme_condensation(
         logger.info(
             f"{n_themes} larger than batch size, using recursive theme condensation"
         )
-        themes_df = await batch_and_run(
+        themes_df, _ = await batch_and_run(
             themes_df,
             prompt_template,
             llm,
@@ -249,7 +255,7 @@ async def theme_condensation(
             break
         n_themes = themes_df.shape[0]
 
-    themes_df = await batch_and_run(
+    themes_df, _ = await batch_and_run(
         themes_df,
         prompt_template,
         llm,
@@ -260,7 +266,7 @@ async def theme_condensation(
     )
 
     logger.info(f"Final number of condensed themes: {themes_df.shape[0]}")
-    return themes_df
+    return themes_df, _
 
 
 async def theme_refinement(
@@ -305,7 +311,7 @@ async def theme_refinement(
     logger.info(f"Running theme refinement on {len(condensed_themes_df)} responses")
     condensed_themes_df["response_id"] = range(len(condensed_themes_df))
 
-    refined_themes = await batch_and_run(
+    refined_themes, _ = await batch_and_run(
         condensed_themes_df,
         prompt_template,
         llm,
@@ -313,7 +319,7 @@ async def theme_refinement(
         question=question,
         system_prompt=system_prompt,
     )
-    return refined_themes
+    return refined_themes, _
 
 
 async def theme_target_alignment(
@@ -362,8 +368,7 @@ async def theme_target_alignment(
         f"Running theme target alignment on {len(refined_themes_df)} themes compressing to {target_n_themes} themes"
     )
     refined_themes_df["response_id"] = range(len(refined_themes_df))
-
-    aligned_themes = await batch_and_run(
+    aligned_themes, _ = await batch_and_run(
         refined_themes_df,
         prompt_template,
         llm,
@@ -372,7 +377,7 @@ async def theme_target_alignment(
         system_prompt=system_prompt,
         target_n_themes=target_n_themes,
     )
-    return aligned_themes
+    return aligned_themes, _
 
 
 async def theme_mapping(
@@ -419,7 +424,7 @@ async def theme_mapping(
         )
         return transposed_df
 
-    return await batch_and_run(
+    mapping, _ = await batch_and_run(
         responses_df,
         prompt_template,
         llm,
@@ -428,6 +433,8 @@ async def theme_mapping(
         refined_themes=transpose_refined_themes(refined_themes_df).to_dict(
             orient="records"
         ),
-        response_id_integrity_check=True,
+        validation_check=True,
+        task_validation_model=ThemeMappingOutput,
         system_prompt=system_prompt,
     )
+    return mapping, _
