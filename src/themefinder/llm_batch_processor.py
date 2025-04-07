@@ -6,12 +6,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional, Type
 
+import openai
 import pandas as pd
 import tiktoken
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel, ValidationError
-from tenacity import before, retry, stop_after_attempt, wait_random_exponential
+from tenacity import (
+    before,
+    before_sleep_log,
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 
 from .themefinder_logging import logger
 
@@ -19,16 +26,17 @@ from .themefinder_logging import logger
 @dataclass
 class BatchPrompt:
     prompt_string: str
-    response_ids: list[str]
+    response_ids: list[int]
 
 
 async def batch_and_run(
-    responses_df: pd.DataFrame,
+    input_df: pd.DataFrame,
     prompt_template: str | Path | PromptTemplate,
     llm: Runnable,
+    task_validation_model: Type[BaseModel] = None,
     batch_size: int = 10,
     partition_key: str | None = None,
-    response_id_integrity_check: bool = False,
+    validation_check: bool = False,
     **kwargs: Any,
 ) -> pd.DataFrame:
     """Process a DataFrame of responses in batches using an LLM.
@@ -43,7 +51,7 @@ async def batch_and_run(
             Defaults to 10.
         partition_key (str | None, optional): Optional column name to group responses
             before batching. Defaults to None.
-        response_id_integrity_check (bool, optional): If True, verifies that all input
+        validation_check (bool, optional): If True, verifies that all input
             response IDs are present in LLM output and retries failed responses individually.
             If False, no integrity checking or retrying occurs. Defaults to False.
         **kwargs (Any): Additional keyword arguments to pass to the prompt template.
@@ -52,30 +60,55 @@ async def batch_and_run(
         pd.DataFrame: DataFrame containing the original responses merged with the
             LLM-processed results.
     """
+
     logger.info(f"Running batch and run with batch size {batch_size}")
     prompt_template = convert_to_prompt_template(prompt_template)
     batch_prompts = generate_prompts(
-        prompt_template, responses_df, batch_size=batch_size, **kwargs
+        prompt_template,
+        input_df,
+        batch_size=batch_size,
+        partition_key=partition_key,
+        **kwargs,
     )
-    llm_responses, failed_ids = await call_llm(
+    processed_rows, failed_ids = await call_llm(
         batch_prompts=batch_prompts,
         llm=llm,
-        response_id_integrity_check=response_id_integrity_check,
+        validation_check=validation_check,
+        task_validation_model=task_validation_model,
     )
-    processed_responses = process_llm_responses(llm_responses, responses_df)
-    if failed_ids and response_id_integrity_check:
-        new_df = responses_df[responses_df["response_id"].astype(str).isin(failed_ids)]
-        processed_failed_responses = await batch_and_run(
-            responses_df=new_df,
-            prompt_template=prompt_template,
-            llm=llm,
-            batch_size=1,
-            partition_key=partition_key,
-            response_id_integrity_check=False,
-            **kwargs,
+    processed_results = process_llm_responses(processed_rows, input_df)
+
+    if failed_ids:
+        retry_df = input_df[input_df["response_id"].isin(failed_ids)]
+        retry_prompts = generate_prompts(
+            prompt_template, retry_df, batch_size=1, **kwargs
         )
-        return pd.concat(objs=[processed_failed_responses, processed_responses])
-    return processed_responses
+        retry_results, unprocessable_ids = await call_llm(
+            batch_prompts=retry_prompts,
+            llm=llm,
+            validation_check=validation_check,
+            task_validation_model=task_validation_model,
+        )
+        retry_processed_results = process_llm_responses(retry_results, retry_df)
+        unprocessable_df = retry_df.loc[retry_df["response_id"].isin(unprocessable_ids)]
+        processed_results = pd.concat([processed_results, retry_processed_results])
+    else:
+        unprocessable_df = pd.DataFrame()
+    return processed_results, unprocessable_df
+
+
+def batch_task_inputs(
+    input_data: pd.DataFrame,
+    prompt_template: PromptTemplate,
+    batch_size: int = 50,
+    **kwargs,
+) -> list[BatchPrompt]:
+    prompt_template = convert_to_prompt_template(prompt_template)
+    batch_prompts = generate_prompts(
+        prompt_template, input_data, batch_size=batch_size, **kwargs
+    )
+
+    return batch_prompts
 
 
 def load_prompt_from_file(file_path: str | Path) -> str:
@@ -226,12 +259,10 @@ def generate_prompts(
     """
     prompt_token_length = calculate_string_token_length(prompt_template.template)
     allowed_tokens_for_data = max_prompt_length - prompt_token_length
-
-    all_batches = batch_task_input_df(
+    batches = batch_task_input_df(
         input_data, allowed_tokens_for_data, batch_size, partition_key
     )
-    prompts = [build_prompt(prompt_template, batch, **kwargs) for batch in all_batches]
-
+    prompts = [build_prompt(prompt_template, batch, **kwargs) for batch in batches]
     return prompts
 
 
@@ -239,8 +270,9 @@ async def call_llm(
     batch_prompts: list[BatchPrompt],
     llm: Runnable,
     concurrency: int = 10,
-    response_id_integrity_check: bool = False,
-):
+    validation_check: bool = False,
+    task_validation_model: Type[BaseModel] = None,
+) -> tuple[list[dict], list[int]]:
     """Process multiple batches of prompts concurrently through an LLM with retry logic.
 
     Args:
@@ -249,7 +281,7 @@ async def call_llm(
         llm (Runnable): LangChain Runnable instance that will process the prompts.
         concurrency (int, optional): Maximum number of simultaneous LLM calls allowed.
             Defaults to 10.
-        response_id_integrity_check (bool, optional): If True, verifies that all input
+        response_id_validation_check (bool, optional): If True, verifies that all input
             response IDs are present in the LLM output. Failed batches are discarded and
             their IDs are returned for retry. Defaults to False.
 
@@ -269,72 +301,71 @@ async def call_llm(
         wait=wait_random_exponential(min=1, max=20),
         stop=stop_after_attempt(6),
         before=before.before_log(logger=logger, log_level=logging.DEBUG),
+        before_sleep=before_sleep_log(logger, logging.ERROR),
         reraise=True,
     )
-    async def async_llm_call(batch_prompt):
+    async def async_llm_call(batch_prompt) -> tuple[list[dict], list[int]]:
         async with semaphore:
-            response = await llm.ainvoke(batch_prompt.prompt_string)
-            parsed_response = json.loads(response.content)
-            failed_ids: set = set()
+            try:
+                llm_response = await llm.ainvoke(batch_prompt.prompt_string)
+                all_results = json.loads(llm_response.content)
+            except (openai.BadRequestError, json.JSONDecodeError) as e:
+                failed_ids = batch_prompt.response_ids
+                logger.warning(e)
+                return [], failed_ids
 
-            if response_id_integrity_check and not check_response_integrity(
-                batch_prompt.response_ids, parsed_response
-            ):
-                # discard this response but keep track of failed response ids
-                failed_ids.update(batch_prompt.response_ids)
-                return {"response": None, "failed_ids": failed_ids}
-
-            return {"response": parsed_response, "failed_ids": failed_ids}
+            if validation_check:
+                failed_ids = get_missing_response_ids(
+                    batch_prompt.response_ids, all_results
+                )
+                validated_results, invalid_rows = validate_task_data(
+                    all_results["responses"], task_validation_model
+                )
+                failed_ids.extend([r["response_id"] for r in invalid_rows])
+                return validated_results, failed_ids
+            else:
+                # Flatten the list to align with valid output format
+                return [r for r in all_results["responses"]], []
 
     results = await asyncio.gather(
         *[async_llm_call(batch_prompt) for batch_prompt in batch_prompts]
     )
+    valid_inputs = [row for result, _ in results for row in result]
+    failed_response_ids = [
+        failed_response_id
+        for _, batch_failures in results
+        for failed_response_id in batch_failures
+    ]
 
-    # Extract responses
-    successful_responses = [
-        r["response"] for r in results if r["response"] is not None
-    ]  # ignore discarded responses
-
-    # Extract failed ids
-    failed_ids: set = set()
-    for r in results:
-        if r["response"] is None:
-            failed_ids.update(r["failed_ids"])
-    return (successful_responses, failed_ids)
+    return valid_inputs, failed_response_ids
 
 
-def check_response_integrity(
-    input_response_ids: set[str], parsed_response: dict
-) -> bool:
-    """Verify that all input response IDs are present in the LLM's parsed response.
+def get_missing_response_ids(
+    input_response_ids: list[int], parsed_response: dict
+) -> set[int]:
+    """Identify which response IDs are missing from the LLM's parsed response.
 
     Args:
         input_response_ids (set[str]): Set of response IDs that were included in the
-            original prompt sent to the LLM.
+            original prompt.
         parsed_response (dict): Parsed response from the LLM containing a 'responses' key
             with a list of dictionaries, each containing a 'response_id' field.
 
     Returns:
-        bool: True if all input response IDs are present in the parsed response and
-            no additional IDs are present, False otherwise.
+        set[str]: Set of response IDs that are missing from the parsed response.
     """
-    response_ids_set = set(input_response_ids)
 
+    response_ids_set = {int(response_id) for response_id in input_response_ids}
     returned_ids_set = {
-        str(
-            element["response_id"]
-        )  # treat ids as strings to match response_ids_in_each_prompt
+        int(element["response_id"])
         for element in parsed_response["responses"]
         if element.get("response_id", False)
     }
-    # assumes: all input ids ought to be present in output
-    if returned_ids_set != response_ids_set:
-        logger.info("Failed integrity check")
-        logger.info(
-            f"Present in original but not returned from LLM: {response_ids_set - returned_ids_set}. Returned in LLM but not present in original: {returned_ids_set - response_ids_set}"
-        )
-        return False
-    return True
+
+    missing_ids = list(response_ids_set - returned_ids_set)
+    if missing_ids:
+        logger.info(f"Missing response IDs from LLM output: {missing_ids}")
+    return missing_ids
 
 
 def process_llm_responses(
@@ -355,12 +386,7 @@ def process_llm_responses(
             - If no response_id in LLM output: DataFrame containing only the LLM results
     """
     responses.loc[:, "response_id"] = responses["response_id"].astype(int)
-    unpacked_responses = [
-        response
-        for batch_response in llm_responses
-        for response in batch_response.get("responses", [])
-    ]
-    task_responses = pd.DataFrame(unpacked_responses)
+    task_responses = pd.DataFrame(llm_responses)
     if "response_id" in task_responses.columns:
         task_responses["response_id"] = task_responses["response_id"].astype(int)
         return responses.merge(task_responses, how="inner", on="response_id")
@@ -401,19 +427,18 @@ def build_prompt(
     prompt = prompt_template.format(
         responses=input_batch.to_dict(orient="records"), **kwargs
     )
-    response_ids = input_batch["response_id"].astype(str).to_list()
-
+    response_ids = input_batch["response_id"].astype(int).to_list()
     return BatchPrompt(prompt_string=prompt, response_ids=response_ids)
 
 
 def validate_task_data(
-    task_data: pd.DataFrame | list[dict], task_data_model: Type[BaseModel]
+    task_data: pd.DataFrame | list[dict], task_validation_model: Type[BaseModel] = None
 ) -> tuple[list[dict], list[dict]]:
     """
     Validate each row in task_output against the provided Pydantic model.
 
     Returns:
-        valid: a list of validated recors(dicts).
+        valid: a list of validated records (dicts).
         invalid: a list of records (dicts) that failed validation.
     """
 
@@ -423,11 +448,14 @@ def validate_task_data(
         else task_data
     )
 
-    valid, invalid = [], []
-    for record in records:
-        try:
-            task_data_model(**record)
-            valid.append(record)
-        except ValidationError:
-            invalid.append(record)
-    return valid, invalid
+    if task_validation_model:
+        valid_records, invalid_records = [], []
+        for record in records:
+            try:
+                task_validation_model(**record)
+                valid_records.append(record)
+            except ValidationError as e:
+                invalid_records.append(record)
+                logger.info(f"Failed Validation: {e}")
+        return valid_records, invalid_records
+    return records, []
