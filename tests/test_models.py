@@ -13,7 +13,7 @@ from themefinder.models import (
     ThemeMappingThemeInput,
     ThemeRefinementInput,
     ThemeRefinementOutput,
-    validate_mapping_reason_and_stance_lengths,
+    validate_mapping_stance_lengths,
     validate_non_empty_fields,
     validate_position,
     validate_stances,
@@ -109,8 +109,8 @@ def test_validate_mapping_unique_labels_invalid():
         validate_mapping_unique_labels(model)
 
 
-# === Tests for validate_mapping_reason_and_stance_lengths ===
-def test_validate_mapping_reason_and_stance_lengths_valid():
+# === Tests for validate_mapping_stance_lengths ===
+def test_validate_mapping_stance_lengths_valid():
     model = MockModel(
         response_id=1,
         response="Valid response",
@@ -118,22 +118,10 @@ def test_validate_mapping_reason_and_stance_lengths_valid():
         reasons=["Reason1", "Reason2"],
         stances=["POSITIVE", "NEGATIVE"],
     )
-    validate_mapping_reason_and_stance_lengths(model)  # Should not raise error
+    validate_mapping_stance_lengths(model)  # Should not raise error
 
 
-def test_validate_mapping_reason_and_stance_lengths_invalid():
-    model = MockModel(
-        response_id=1,
-        response="Valid response",
-        labels=["Label1"],
-        reasons=["Reason1", "Reason2"],  # Mismatch in length
-        stances=["POSITIVE"],
-    )
-    with pytest.raises(
-        ValueError, match="'reasons' must have the same length as 'labels'"
-    ):
-        validate_mapping_reason_and_stance_lengths(model)
-
+def test_validate_mapping_stance_lengths_invalid():
     model = MockModel(
         response_id=1,
         response="Valid response",
@@ -144,7 +132,7 @@ def test_validate_mapping_reason_and_stance_lengths_invalid():
     with pytest.raises(
         ValueError, match="'stances' must have the same length as 'labels'"
     ):
-        validate_mapping_reason_and_stance_lengths(model)
+        validate_mapping_stance_lengths(model)
 
 
 # === SentimentAnalysisInput ===
@@ -170,14 +158,10 @@ def test_sentiment_analysis_output_valid():
     assert model.position == "agreement"
 
 
-def test_sentiment_analysis_output_invalid():
+def test_sentiment_analysis_output_invalid_position():
     raises_validation_error(
         SentimentAnalysisOutput,
-        {"response_id": 1, "response": "Text", "position": "invalid"},
-    )
-    raises_validation_error(
-        SentimentAnalysisOutput,
-        {"response_id": 1, "response": "", "position": "agreement"},
+        {"response_id": 1, "position": "invalid"},
     )
 
 
@@ -311,18 +295,7 @@ def test_theme_mapping_output_valid():
     assert len(model.labels) == len(model.reasons) == len(model.stances)
 
 
-def test_theme_mapping_output_invalid():
-    raises_validation_error(
-        ThemeMappingOutput,
-        {
-            "response_id": 1,
-            "response": "Valid",
-            "position": "wrong_value",
-            "labels": ["Label1"],
-            "reasons": ["Reason1", "Reason2"],  # Different length
-            "stances": ["POSITIVE"],
-        },
-    )
+def test_theme_mapping_output_invalid_stance():
     raises_validation_error(
         ThemeMappingOutput,
         {

@@ -25,9 +25,7 @@ def validate_stances(model):
     return model
 
 
-def validate_mapping_reason_and_stance_lengths(model):
-    if len(model.reasons) != len(model.labels):
-        raise ValueError("'reasons' must have the same length as 'labels'")
+def validate_mapping_stance_lengths(model):
     if len(model.stances) != len(model.labels):
         raise ValueError("'stances' must have the same length as 'labels'")
     return model
@@ -51,7 +49,6 @@ class SentimentAnalysisInput(BaseModel):
 
 class SentimentAnalysisOutput(BaseModel):
     response_id: int = Field(gt=0)
-    response: str
     position: str
 
     @model_validator(mode="after")
@@ -154,17 +151,13 @@ class ThemeMappingThemeInput(BaseModel):
 
 class ThemeMappingOutput(BaseModel):
     response_id: int = Field(ge=0)
-    response: str
-    position: str
     labels: list[str]
     reasons: list[str]
     stances: list[str]
 
     @model_validator(mode="after")
     def run_validations(self):
-        validate_position(self)
         validate_stances(self)
-        validate_mapping_reason_and_stance_lengths(self)
+        validate_mapping_stance_lengths(self)
         validate_mapping_unique_labels(self)
-        validate_non_empty_fields(self)
         return self
