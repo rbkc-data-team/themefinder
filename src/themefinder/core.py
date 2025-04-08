@@ -446,3 +446,50 @@ async def theme_mapping(
         system_prompt=system_prompt,
     )
     return mapping, _
+
+
+async def detail_detection(
+    responses_df: pd.DataFrame,
+    llm: Runnable,
+    question: str,
+    batch_size: int = 20,
+    prompt_template: str | Path | PromptTemplate = "detail_detection",
+    system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
+) -> pd.DataFrame:
+    """Identify responses that provide high-value detailed evidence.
+
+    This function processes survey responses in batches to analyze their level of detail
+    and evidence using a language model. It identifies responses that contain specific
+    examples, data, or detailed reasoning that provide strong supporting evidence.
+
+    Args:
+        responses_df (pd.DataFrame): DataFrame containing survey responses to analyze.
+            Must contain 'response_id' and 'response' columns.
+        llm (Runnable): Language model instance to use for detail detection.
+        question (str): The survey question.
+        batch_size (int, optional): Number of responses to process in each batch.
+            Defaults to 20.
+        prompt_template (str | Path | PromptTemplate, optional): Template for structuring
+            the prompt to the LLM. Can be a string identifier, path to template file,
+            or PromptTemplate instance. Defaults to "detail_detection".
+        system_prompt (str): System prompt to guide the LLM's behavior.
+            Defaults to CONSULTATION_SYSTEM_PROMPT.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the original responses enriched with
+            detail detection results, identifying high-value evidence.
+
+    Note:
+        The function uses response_id_integrity_check to ensure responses maintain
+        their original order and association after processing.
+    """
+    logger.info(f"Running detail detection on {len(responses_df)} responses")
+    return await batch_and_run(
+        responses_df,
+        prompt_template,
+        llm,
+        batch_size=batch_size,
+        question=question,
+        response_id_integrity_check=True,
+        system_prompt=system_prompt,
+    )
