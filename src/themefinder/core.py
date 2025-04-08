@@ -409,7 +409,7 @@ async def theme_mapping(
             theme mapping results, ensuring all responses are mapped through ID integrity checks.
     """
     logger.info(
-        f"Running theme mapping on {len(responses_df)} responses using {len(refined_themes_df.columns)} themes"
+        f"Running theme mapping on {len(responses_df)} responses using {len(refined_themes_df)} themes"
     )
 
     def transpose_refined_themes(refined_themes: pd.DataFrame):
