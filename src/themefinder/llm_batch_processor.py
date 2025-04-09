@@ -159,7 +159,7 @@ def split_overflowing_batch(
     batch: pd.DataFrame, allowed_tokens: int
 ) -> list[pd.DataFrame]:
     """
-    Splits a DataFrame batch into smaller sub-batches such that each sub-batch's total token count 
+    Splits a DataFrame batch into smaller sub-batches such that each sub-batch's total token count
     does not exceed the allowed token limit.
 
     Args:
@@ -208,14 +208,13 @@ def batch_task_input_df(
     partition_key: Optional[str] = None,
 ) -> list[pd.DataFrame]:
     """
-    Partitions and batches a DataFrame according to a token limit and batch size, optionally using 
-    a partition key. Batches that exceed the token limit are further split.
+    Partitions and batches a DataFrame according to a token limit and batch size, optionally using a partition key. Batches that exceed the token limit are further split.
 
     Args:
         df (pd.DataFrame): The input DataFrame to batch.
         allowed_tokens (int): Maximum allowed tokens per batch.
         batch_size (int): Maximum number of rows per batch before token filtering.
-        partition_key (Optional[str], optional): Column name to partition the DataFrame by. 
+        partition_key (Optional[str], optional): Column name to partition the DataFrame by.
             Defaults to None.
 
     Returns:
@@ -418,7 +417,7 @@ def calculate_string_token_length(input_text: str, model: str = None) -> int:
 
     Args:
         input_text (str): The input string to tokenize.
-        model (str, optional): The model name used for tokenization. If not provided, 
+        model (str, optional): The model name used for tokenization. If not provided,
             uses the MODEL_NAME environment variable or defaults to "gpt-4o".
 
     Returns:
