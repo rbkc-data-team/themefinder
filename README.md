@@ -69,7 +69,7 @@ system_prompt = "You are an AI evaluation tool analyzing survey responses about 
 # Run the function to find themes
 # We use asyncio to query LLM endpoints asynchronously, so we need to await our function
 async def main():
-    result = await find_themes(responses_df, llm, question, system_prompt)
+    result = await find_themes(responses_df, llm, question, system_prompt=system_prompt)
     print(result)
 
 if __name__ == "__main__":
