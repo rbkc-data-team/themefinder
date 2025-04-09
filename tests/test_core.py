@@ -61,8 +61,8 @@ async def test_sentiment_analysis(mock_llm, sample_df):
         content=json.dumps(
             {
                 "responses": [
-                    {"response_id": 1, "position": "agreement"},
-                    {"response_id": 2, "position": "disagreement"},
+                    {"response_id": 1, "position": "AGREEMENT"},
+                    {"response_id": 2, "position": "DISAGREEMENT"},
                 ]
             }
         )
@@ -70,8 +70,6 @@ async def test_sentiment_analysis(mock_llm, sample_df):
     result, _ = await sentiment_analysis(
         sample_df, mock_llm, question="test question", batch_size=2
     )
-    print("result", result)
-    print("failed", _)
     assert isinstance(result, pd.DataFrame)
     assert "position" in result.columns
     assert mock_llm.ainvoke.call_count == 1
@@ -220,7 +218,6 @@ async def test_theme_mapping(mock_llm, sample_sentiment_df):
         refined_themes_df=refined_df,
         batch_size=2,
     )
-    print("TM result", result)
     assert isinstance(result, pd.DataFrame)
     assert "response_id" in result.columns
     assert "reasons" in result.columns
@@ -233,7 +230,9 @@ async def test_theme_mapping(mock_llm, sample_sentiment_df):
 async def test_find_themes(monkeypatch):
     # Dummy async functions returning simple DataFrames
     async def dummy_sentiment_analysis(responses_df, llm, question, system_prompt):
-        return pd.DataFrame({"sentiment": ["positive"]}), pd.DataFrame()
+        return pd.DataFrame(
+            {"response_id": 1, "response": "dummy", "sentiment": ["POSITIVE"]}
+        ), pd.DataFrame()
 
     async def dummy_theme_generation(sentiment_df, llm, question, system_prompt):
         return pd.DataFrame({"theme": ["theme1"]}), pd.DataFrame()
@@ -288,8 +287,6 @@ async def test_find_themes(monkeypatch):
         "question",
         "sentiment",
         "themes",
-        "condensed_themes",
-        "refined_themes",
         "mapping",
         "unprocessables",
     }
@@ -299,7 +296,7 @@ async def test_find_themes(monkeypatch):
     assert result["question"] == question
 
     # Verify that each stage returns a DataFrame with content.
-    for key in ["sentiment", "themes", "condensed_themes", "refined_themes", "mapping"]:
+    for key in ["sentiment", "themes", "mapping"]:
         df = result[key]
         assert isinstance(df, pd.DataFrame)
         assert not df.empty
