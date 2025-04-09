@@ -52,9 +52,10 @@ async def batch_and_run(
         partition_key (str | None, optional): Optional column name to group input rows
             before batching. Defaults to None.
         validation_check (bool, optional): If True, verifies that all input
-            response IDs are present in LLM output and retries failed responses individually.
+            response IDs are present in LLM output and validates the rows against the validation model,
+            failed rows are retried individually.
             If False, no integrity checking or retrying occurs. Defaults to False.
-        task_validation_model (Type[BaseModel]):
+        task_validation_model (Type[BaseModel]): the pydanctic model to validate each row against
         **kwargs (Any): Additional keyword arguments to pass to the prompt template.
 
     Returns:
@@ -157,6 +158,17 @@ def partition_dataframe(
 def split_overflowing_batch(
     batch: pd.DataFrame, allowed_tokens: int
 ) -> list[pd.DataFrame]:
+    """
+    Splits a DataFrame batch into smaller sub-batches such that each sub-batch's total token count 
+    does not exceed the allowed token limit.
+
+    Args:
+        batch (pd.DataFrame): The input DataFrame to split.
+        allowed_tokens (int): The maximum allowed number of tokens per sub-batch.
+
+    Returns:
+        list[pd.DataFrame]: A list of sub-batches, each within the token limit.
+    """
     sub_batches = []
     current_indices = []
     current_token_sum = 0
@@ -195,6 +207,20 @@ def batch_task_input_df(
     batch_size: int,
     partition_key: Optional[str] = None,
 ) -> list[pd.DataFrame]:
+    """
+    Partitions and batches a DataFrame according to a token limit and batch size, optionally using 
+    a partition key. Batches that exceed the token limit are further split.
+
+    Args:
+        df (pd.DataFrame): The input DataFrame to batch.
+        allowed_tokens (int): Maximum allowed tokens per batch.
+        batch_size (int): Maximum number of rows per batch before token filtering.
+        partition_key (Optional[str], optional): Column name to partition the DataFrame by. 
+            Defaults to None.
+
+    Returns:
+        list[pd.DataFrame]: A list of batches, each within the specified token and size limits.
+    """
     batches = []
     partitions = partition_dataframe(df, partition_key)
 
@@ -387,6 +413,17 @@ def process_llm_responses(
 
 
 def calculate_string_token_length(input_text: str, model: str = None) -> int:
+    """
+    Calculates the number of tokens in a given string using the specified model's tokenizer.
+
+    Args:
+        input_text (str): The input string to tokenize.
+        model (str, optional): The model name used for tokenization. If not provided, 
+            uses the MODEL_NAME environment variable or defaults to "gpt-4o".
+
+    Returns:
+        int: The number of tokens in the input string.
+    """
     # Use the MODEL_NAME env var if no model is provided; otherwise default to "gpt-4o"
     model = model or os.environ.get("MODEL_NAME", "gpt-4o")
     tokenizer_encoding = tiktoken.encoding_for_model(model)
