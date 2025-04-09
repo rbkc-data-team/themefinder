@@ -46,7 +46,7 @@ async def test_retries(mock_llm, sample_df):
     mock_llm.ainvoke.side_effect = [
         exception,
         MagicMock(
-            content='{"responses": [{"response_id": 1, "position": "agreement", "text": "response1"}, {"response_id": 2, "position": "disagreement", "text": "response2"}]}'
+            content='{"responses": [{"response_id": 1, "position": "AGREEMENT", "text": "response1"}, {"response_id": 2, "position": "DISAGREEMENT", "text": "response2"}]}'
         ),
     ]
     result, _ = await sentiment_analysis(sample_df, mock_llm, question="doesn't matter")

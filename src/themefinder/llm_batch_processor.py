@@ -33,32 +33,38 @@ async def batch_and_run(
     input_df: pd.DataFrame,
     prompt_template: str | Path | PromptTemplate,
     llm: Runnable,
-    task_validation_model: Type[BaseModel] = None,
     batch_size: int = 10,
     partition_key: str | None = None,
     validation_check: bool = False,
+    task_validation_model: Type[BaseModel] = None,
     **kwargs: Any,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Process a DataFrame of responses in batches using an LLM.
 
     Args:
-        responses_df (pd.DataFrame): DataFrame containing responses to be processed.
+        input_df (pd.DataFrame): DataFrame containing input to be processed.
             Must include a 'response_id' column.
         prompt_template (Union[str, Path, PromptTemplate]): Template for LLM prompts.
             Can be a string (file path), Path object, or PromptTemplate.
         llm (Runnable): LangChain Runnable instance that will process the prompts.
-        batch_size (int, optional): Number of responses to process in each batch.
+        batch_size (int, optional): Number of input rows to process in each batch.
             Defaults to 10.
-        partition_key (str | None, optional): Optional column name to group responses
+        partition_key (str | None, optional): Optional column name to group input rows
             before batching. Defaults to None.
         validation_check (bool, optional): If True, verifies that all input
             response IDs are present in LLM output and retries failed responses individually.
             If False, no integrity checking or retrying occurs. Defaults to False.
+        task_validation_model (Type[BaseModel]):
         **kwargs (Any): Additional keyword arguments to pass to the prompt template.
 
     Returns:
         pd.DataFrame: DataFrame containing the original responses merged with the
             LLM-processed results.
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame]:
+            A tuple containing two DataFrames:
+                - The first DataFrame contains the rows that were successfully processes by the LLM
+                - The second DataFrame contains the rows that could not be processed by the LLM
     """
 
     logger.info(f"Running batch and run with batch size {batch_size}")
@@ -95,20 +101,6 @@ async def batch_and_run(
     else:
         unprocessable_df = pd.DataFrame()
     return processed_results, unprocessable_df
-
-
-def batch_task_inputs(
-    input_data: pd.DataFrame,
-    prompt_template: PromptTemplate,
-    batch_size: int = 50,
-    **kwargs,
-) -> list[BatchPrompt]:
-    prompt_template = convert_to_prompt_template(prompt_template)
-    batch_prompts = generate_prompts(
-        prompt_template, input_data, batch_size=batch_size, **kwargs
-    )
-
-    return batch_prompts
 
 
 def load_prompt_from_file(file_path: str | Path) -> str:
@@ -271,7 +263,7 @@ async def call_llm(
     llm: Runnable,
     concurrency: int = 10,
     validation_check: bool = False,
-    task_validation_model: Type[BaseModel] = None,
+    task_validation_model: Optional[Type[BaseModel]] = None,
 ) -> tuple[list[dict], list[int]]:
     """Process multiple batches of prompts concurrently through an LLM with retry logic.
 
@@ -281,9 +273,10 @@ async def call_llm(
         llm (Runnable): LangChain Runnable instance that will process the prompts.
         concurrency (int, optional): Maximum number of simultaneous LLM calls allowed.
             Defaults to 10.
-        response_id_validation_check (bool, optional): If True, verifies that all input
+        validation_check (bool, optional): If True, verifies that all input
             response IDs are present in the LLM output. Failed batches are discarded and
             their IDs are returned for retry. Defaults to False.
+        task_validation_model (Type[BaseModel]): The Pydantic model to check the LLM outputs against
 
     Returns:
         tuple[list[dict[str, Any]], set[str]]: A tuple containing:
@@ -342,7 +335,7 @@ async def call_llm(
 
 def get_missing_response_ids(
     input_response_ids: list[int], parsed_response: dict
-) -> set[int]:
+) -> list[int]:
     """Identify which response IDs are missing from the LLM's parsed response.
 
     Args:
@@ -409,7 +402,7 @@ def build_prompt(
 
     The function converts the input DataFrame batch into a list of dictionaries (one per row) and passes
     this list to the prompt template's format method under the key 'responses', along with any additional
-    keyword arguments. It also extracts the 'response_id' column from the batch, converts the IDs to strings,
+    keyword arguments. It also extracts the 'response_id' column from the batch,
     and uses these to create the BatchPrompt.
 
     Args:
