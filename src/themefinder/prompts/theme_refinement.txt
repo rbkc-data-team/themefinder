@@ -46,7 +46,7 @@ You will produce a list of CLEAR STANCE TOPICS based on the input. Each topic sh
    b. Create a neutral, concise topic label.
    c. Write a more detailed description that provides context without taking sides.
 4. Review the entire list to ensure distinctiveness and adjust as needed.
-5. Assign each output topic a topic_id a single uppercase letters (starting from 'A')
+5. Assign each output topic a topic_id a single uppercase letters (starting from 'A', for the 27th element use AA)
 6. Combine the topic label and description with a colon separator
 
 Return your output in the following JSON format:
