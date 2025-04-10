@@ -484,12 +484,13 @@ async def detail_detection(
         their original order and association after processing.
     """
     logger.info(f"Running detail detection on {len(responses_df)} responses")
-    return await batch_and_run(
+    detailed, _ = await batch_and_run(
         responses_df,
         prompt_template,
         llm,
         batch_size=batch_size,
         question=question,
-        response_id_integrity_check=True,
+        validation_check=True,
         system_prompt=system_prompt,
     )
+    return detailed, _
