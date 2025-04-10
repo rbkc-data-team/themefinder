@@ -1,14 +1,18 @@
 from unittest.mock import MagicMock
 
+import httpx
+import openai
 import pandas as pd
 import pytest
 import tiktoken
 
 from themefinder import sentiment_analysis
 from themefinder.llm_batch_processor import (
+    BatchPrompt,
     batch_task_input_df,
     build_prompt,
     calculate_string_token_length,
+    call_llm,
     generate_prompts,
     process_llm_responses,
     split_overflowing_batch,
@@ -24,7 +28,7 @@ async def test_process_llm_responses_with_clashing_types():
     responses = pd.DataFrame({"response_id": [1], "text": ["response1"]})
     processed = process_llm_responses(
         # llm gives us a str response_id but the original response_id is an int
-        [{"responses": [{"response_id": "1", "llm_contribution": "banana"}]}],
+        [{"response_id": 1, "llm_contribution": "banana"}],
         responses,
     )
     assert list(processed["response_id"]) == [1]
@@ -42,10 +46,10 @@ async def test_retries(mock_llm, sample_df):
     mock_llm.ainvoke.side_effect = [
         exception,
         MagicMock(
-            content='{"responses": [{"response_id": 1, "position": "agreement", "text": "response1"}, {"response_id": 2, "position": "disagreement", "text": "response2"}]}'
+            content='{"responses": [{"response_id": 1, "position": "AGREEMENT", "text": "response1"}, {"response_id": 2, "position": "DISAGREEMENT", "text": "response2"}]}'
         ),
     ]
-    result = await sentiment_analysis(sample_df, mock_llm, question="doesn't matter")
+    result, _ = await sentiment_analysis(sample_df, mock_llm, question="doesn't matter")
     # we got something back
     assert isinstance(result, pd.DataFrame)
     # we hit the llm twice
@@ -83,7 +87,6 @@ def test_calls_encoding_for_model(monkeypatch):
     assert token_length == 3
 
 
-# Define a dummy prompt template with a template attribute and a predictable format() method.
 class DummyPromptTemplate:
     def __init__(self, template):
         self.template = template
@@ -107,7 +110,7 @@ def test_build_prompt():
         f"Prompt with {len(df.to_dict(orient='records'))} responses. {extra_info}"
     )
     assert result.prompt_string == expected_prompt
-    assert result.response_ids == ["1", "2"]
+    assert result.response_ids == [1, 2]
 
 
 def test_build_prompt_with_mock_template():
@@ -124,7 +127,7 @@ def test_build_prompt_with_mock_template():
     )
 
     assert result.prompt_string == "formatted prompt"
-    assert result.response_ids == ["101", "202"]
+    assert result.response_ids == [101, 202]
 
 
 def dummy_token_length_low(input_text: str, model="gpt-4o"):
@@ -464,11 +467,11 @@ def test_generate_prompts(monkeypatch, dummy_input_data):
     # "Formatted: 2 responses. foo"
     assert prompts[0].prompt_string == "Prompt with 2 responses. foo"
     # And response IDs should be converted to strings.
-    assert prompts[0].response_ids == ["1", "2"]
+    assert prompts[0].response_ids == [1, 2]
 
     # For batch2, which has 1 row:
     assert prompts[1].prompt_string == "Prompt with 1 responses. foo"
-    assert prompts[1].response_ids == ["3"]
+    assert prompts[1].response_ids == [3]
 
 
 def test_generate_prompts_with_partition(monkeypatch):
@@ -525,10 +528,35 @@ def test_generate_prompts_with_partition(monkeypatch):
 
     # Since groupby order is not guaranteed, collect the response IDs from both prompts.
     response_ids = {tuple(prompt.response_ids) for prompt in prompts}
-    expected = {("1", "2"), ("3", "4")}
+    expected = {(1, 2), (3, 4)}
     assert response_ids == expected
 
     # Also verify that the prompt string includes the correct number of responses.
     for prompt in prompts:
         if len(prompt.response_ids) == 2:
             assert prompt.prompt_string == "Prompt with 2 responses. bar"
+
+
+@pytest.mark.asyncio
+async def test_call_llm_bad_request(monkeypatch, mock_llm):
+    batch_prompts = [BatchPrompt(prompt_string="dummy prompt", response_ids=[1, 2])]
+
+    class DummyBadRequestError(openai.BadRequestError):
+        def __init__(self, *args, **kwargs):
+            dummy_request = httpx.Request("GET", "http://dummy.url")
+            dummy_response = httpx.Response(
+                status_code=400,
+                content=b'{"error": "dummy"}',
+                headers={"Content-Type": "application/json"},
+                request=dummy_request,
+            )
+            super().__init__(
+                "dummy message", response=dummy_response, body="dummy body"
+            )
+
+    mock_llm.ainvoke.side_effect = DummyBadRequestError()
+    results, failed_ids = await call_llm(batch_prompts, mock_llm)
+
+    # Verify that each response id in the result contains the expected failure details.
+    for response_id in batch_prompts[0].response_ids:
+        assert response_id in failed_ids

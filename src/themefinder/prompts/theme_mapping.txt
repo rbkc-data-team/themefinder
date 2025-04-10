@@ -17,7 +17,7 @@ Your task is to analyze each response and decide which topics are present. Guide
     - There is no limit on how many topics can be assigned to a response.
     - For each assignment provide a single rationale for why you have chosen the label.
     - For each topic identified in a response, indicate whether the response expresses a positive or negative stance toward that topic (options: 'POSITIVE' or 'NEGATIVE')
-    - If a response contains both positive and negative statements about a topic within the same response, choose the stance that receives more emphasis or appears more central to the argument
+    - You MUST use either 'POSTIVE' or 'NEGATIVE'
     - The order of reasons and stances must align with the order of labels (e.g., stance_a applies to topic_a)
 
 You MUST include every response ID in the output.
@@ -30,13 +30,13 @@ The final output should be in the following JSON format:
 {{
   "responses": [
     {{
-      "response_id": "response_id_1",
+      "response_id": response_id_1,
       "reasons": ["reason_a", "reason_b"],
       "labels": ["topic_a", "topic_b"],
       "stances": ["stance_a", "stance_b"],
     }},
     {{
-      "response_id": "response_id_2",
+      "response_id": response_id_2,
       "reasons": ["reason_c"],
       "labels": ["topic_c"],
       "stances": ["stance_c"],
