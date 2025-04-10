@@ -138,7 +138,7 @@ async def sentiment_analysis(
         their original order and association after processing.
     """
     logger.info(f"Running sentiment analysis on {len(responses_df)} responses")
-    processed_rows, unprocessable_rows = await batch_and_run(
+    sentiment, unprocessable = await batch_and_run(
         responses_df,
         prompt_template,
         llm,
@@ -149,7 +149,7 @@ async def sentiment_analysis(
         system_prompt=system_prompt,
     )
 
-    return processed_rows, unprocessable_rows
+    return sentiment, unprocessable
 
 
 async def theme_generation(
@@ -432,7 +432,7 @@ async def theme_mapping(
         )
         return transposed_df
 
-    mapping, _ = await batch_and_run(
+    mapping, unprocessable = await batch_and_run(
         responses_df,
         prompt_template,
         llm,
@@ -445,7 +445,7 @@ async def theme_mapping(
         task_validation_model=ThemeMappingOutput,
         system_prompt=system_prompt,
     )
-    return mapping, _
+    return mapping, unprocessable
 
 
 async def detail_detection(
