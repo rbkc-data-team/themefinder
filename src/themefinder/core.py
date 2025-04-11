@@ -6,7 +6,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import Runnable
 
 from .llm_batch_processor import batch_and_run, load_prompt_from_file
-from .models import SentimentAnalysisOutput, ThemeMappingOutput
+from .models import SentimentAnalysisOutput, ThemeMappingOutput, DetailDetectionOutput
 from .themefinder_logging import logger
 
 CONSULTATION_SYSTEM_PROMPT = load_prompt_from_file("consultation_system_prompt")
@@ -493,6 +493,7 @@ async def detail_detection(
         batch_size=batch_size,
         question=question,
         validation_check=True,
+        task_validation_model=DetailDetectionOutput,
         system_prompt=system_prompt,
     )
     return detailed, _
