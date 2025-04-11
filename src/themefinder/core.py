@@ -455,7 +455,7 @@ async def detail_detection(
     batch_size: int = 20,
     prompt_template: str | Path | PromptTemplate = "detail_detection",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Identify responses that provide high-value detailed evidence.
 
     This function processes survey responses in batches to analyze their level of detail
@@ -476,8 +476,10 @@ async def detail_detection(
             Defaults to CONSULTATION_SYSTEM_PROMPT.
 
     Returns:
-        pd.DataFrame: DataFrame containing the original responses enriched with
-            detail detection results, identifying high-value evidence.
+        tuple[pd.DataFrame, pd.DataFrame]:
+            A tuple containing two DataFrames:
+                - The first DataFrame contains the rows that were successfully processed by the LLM
+                - The second DataFrame contains the rows that could not be processed by the LLM
 
     Note:
         The function uses response_id_integrity_check to ensure responses maintain
