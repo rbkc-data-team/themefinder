@@ -37,6 +37,7 @@ async def batch_and_run(
     partition_key: str | None = None,
     validation_check: bool = False,
     task_validation_model: Optional[Type[BaseModel]] = None,
+    concurrency: int = 10,
     **kwargs: Any,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Process a DataFrame of responses in batches using an LLM.
@@ -56,6 +57,8 @@ async def batch_and_run(
             failed rows are retried individually.
             If False, no integrity checking or retrying occurs. Defaults to False.
         task_validation_model (Optional[Type[BaseModel]]): the pydanctic model to validate each row against
+        concurrency (int, optional): Maximum number of simultaneous LLM calls allowed.
+            Defaults to 10.
         **kwargs (Any): Additional keyword arguments to pass to the prompt template.
 
     Returns:
@@ -82,6 +85,7 @@ async def batch_and_run(
         llm=llm,
         validation_check=validation_check,
         task_validation_model=task_validation_model,
+        concurrency=concurrency,
     )
     processed_results = process_llm_responses(processed_rows, input_df)
 
@@ -95,6 +99,7 @@ async def batch_and_run(
             llm=llm,
             validation_check=validation_check,
             task_validation_model=task_validation_model,
+            concurrency=concurrency,
         )
         retry_processed_results = process_llm_responses(retry_results, retry_df)
         unprocessable_df = retry_df.loc[retry_df["response_id"].isin(unprocessable_ids)]

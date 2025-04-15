@@ -229,29 +229,37 @@ async def test_theme_mapping(mock_llm, sample_sentiment_df):
 @pytest.mark.asyncio
 async def test_find_themes(monkeypatch):
     # Dummy async functions returning simple DataFrames
-    async def dummy_sentiment_analysis(responses_df, llm, question, system_prompt):
+    async def dummy_sentiment_analysis(
+        responses_df, llm, question, system_prompt, concurrency
+    ):
         return pd.DataFrame(
             {"response_id": 1, "response": "dummy", "sentiment": ["POSITIVE"]}
         ), pd.DataFrame()
 
-    async def dummy_theme_generation(sentiment_df, llm, question, system_prompt):
+    async def dummy_theme_generation(
+        sentiment_df, llm, question, system_prompt, concurrency
+    ):
         return pd.DataFrame({"theme": ["theme1"]}), pd.DataFrame()
 
-    async def dummy_theme_condensation(theme_df, llm, question, system_prompt):
+    async def dummy_theme_condensation(
+        theme_df, llm, question, system_prompt, concurrency
+    ):
         return pd.DataFrame({"condensed_theme": ["condensed_theme1"]}), pd.DataFrame()
 
-    async def dummy_theme_refinement(condensed_theme_df, llm, question, system_prompt):
+    async def dummy_theme_refinement(
+        condensed_theme_df, llm, question, system_prompt, concurrency
+    ):
         return pd.DataFrame({"refined_theme": ["refined_theme1"]}), pd.DataFrame()
 
     async def dummy_theme_target_alignment(
-        refined_theme_df, llm, question, target_n_themes, system_prompt
+        refined_theme_df, llm, question, target_n_themes, system_prompt, concurrency
     ):
         return pd.DataFrame(
             {"refined_theme": [f"aligned_theme_for_{target_n_themes}"]}
         ), pd.DataFrame()
 
     async def dummy_theme_mapping(
-        sentiment_df, llm, question, refined_themes_df, system_prompt
+        sentiment_df, llm, question, refined_themes_df, system_prompt, concurrency
     ):
         return pd.DataFrame({"mapping": ["mapped_theme1"]}), pd.DataFrame()
 
