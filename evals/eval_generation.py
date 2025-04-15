@@ -28,17 +28,17 @@ async def evaluate_generation():
         model_kwargs={"response_format": {"type": "json_object"}},
     )
     sentiments, question, theme_framework = load_responses_and_framework()
-    themes_df = await theme_generation(
+    themes_df, _ = await theme_generation(
         responses_df=sentiments,
         llm=llm,
         question=question,
     )
-    condensed_themes_df = await theme_condensation(
+    condensed_themes_df, _ = await theme_condensation(
         themes_df,
         llm=llm,
         question=question,
     )
-    refined_themes_df = await theme_refinement(
+    refined_themes_df, _ = await theme_refinement(
         condensed_themes_df,
         llm=llm,
         question=question,

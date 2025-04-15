@@ -22,16 +22,16 @@ def load_mapped_responses(
         f"app_data/evals/theme_mapping/question_{question_number}_expanded_question.txt",
         bucket_name=bucket_name,
     ).decode()
-    topics = json.loads(
-        download_file_from_bucket(
-            f"app_data/evals/theme_mapping/question_{question_number}_topics.json",
-            bucket_name=bucket_name,
+    topics = pd.DataFrame(
+        json.loads(
+            download_file_from_bucket(
+                f"app_data/evals/theme_mapping/question_{question_number}_topics.json",
+                bucket_name=bucket_name,
+            )
         )
-    )
-    cleaned_topics = {}
-    for t in topics:
-        cleaned_topics[t] = topics[t]["topic_name"] + ": " + topics[t]["rationale"]
-    cleaned_topics = pd.DataFrame.from_dict(data=cleaned_topics, orient="index").T
+    ).T
+    topics["topic"] = topics["topic_name"] + ": " + topics["rationale"]
+    topics = topics.rename_axis("topic_id").reset_index()
     responses = pd.read_csv(
         io.BytesIO(
             download_file_from_bucket(
@@ -41,7 +41,7 @@ def load_mapped_responses(
         )
     )
     responses["topics"] = responses["topics"].apply(ast.literal_eval)
-    return question, cleaned_topics, responses
+    return question, topics[["topic_id", "topic"]], responses
 
 
 async def evaluate_mapping(question_num: int | None = None):
@@ -54,7 +54,7 @@ async def evaluate_mapping(question_num: int | None = None):
     questions_to_process = [question_num] if question_num is not None else range(1, 4)
     for i in questions_to_process:
         question, topics, responses = load_mapped_responses(i)
-        result = await theme_mapping(
+        result, _ = await theme_mapping(
             responses_df=responses[["response_id", "response"]],
             llm=llm,
             question=question,

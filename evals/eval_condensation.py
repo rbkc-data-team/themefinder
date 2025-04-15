@@ -36,7 +36,7 @@ async def evaluate_condensation():
         model_kwargs={"response_format": {"type": "json_object"}},
     )
     themes, question = load_generated_themes()
-    condensed_themes = await theme_condensation(
+    condensed_themes, _ = await theme_condensation(
         themes,
         llm=llm,
         question=question,

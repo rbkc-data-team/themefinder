@@ -40,7 +40,7 @@ async def evaluate_sentiment():
 
     question, responses = load_responses()
 
-    result = await sentiment_analysis(
+    result, _ = await sentiment_analysis(
         responses_df=responses[["response_id", "response"]],
         llm=llm,
         question=question,
@@ -51,7 +51,9 @@ async def evaluate_sentiment():
     merged = responses.merge(
         result[["response_id", "ai_position"]], "inner", on="response_id"
     )
-
+    merged["ai_position"] = merged["ai_position"].map(
+        {"DISAGREEMENT": "DISAGREE", "AGREEMENT": "AGREE"}
+    )
     accuracy = calculate_sentiment_metrics(merged)
     print(f"AI Agreement Accuracy: {accuracy["accuracy"]}")
 
