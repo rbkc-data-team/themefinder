@@ -19,6 +19,7 @@ async def find_themes(
     target_n_themes: int | None = None,
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
     verbose: bool = True,
+    concurrency: int = 10,
 ) -> dict[str, str | pd.DataFrame]:
     """Process survey responses through a multi-stage theme analysis pipeline.
 
@@ -40,6 +41,7 @@ async def find_themes(
             Defaults to CONSULTATION_SYSTEM_PROMPT.
         verbose (bool): Whether to show information messages during processing.
             Defaults to True.
+        concurrency (int): Number of concurrent API calls to make. Defaults to 10.
 
     Returns:
         dict[str, str | pd.DataFrame]: Dictionary containing results from each pipeline stage:
@@ -56,21 +58,28 @@ async def find_themes(
         llm,
         question=question,
         system_prompt=system_prompt,
+        concurrency=concurrency,
     )
     theme_df, _ = await theme_generation(
         sentiment_df,
         llm,
         question=question,
         system_prompt=system_prompt,
+        concurrency=concurrency,
     )
     condensed_theme_df, _ = await theme_condensation(
-        theme_df, llm, question=question, system_prompt=system_prompt
+        theme_df,
+        llm,
+        question=question,
+        system_prompt=system_prompt,
+        concurrency=concurrency,
     )
     refined_theme_df, _ = await theme_refinement(
         condensed_theme_df,
         llm,
         question=question,
         system_prompt=system_prompt,
+        concurrency=concurrency,
     )
     if target_n_themes is not None:
         refined_theme_df, _ = await theme_target_alignment(
@@ -79,6 +88,7 @@ async def find_themes(
             question=question,
             target_n_themes=target_n_themes,
             system_prompt=system_prompt,
+            concurrency=concurrency,
         )
     mapping_df, mapping_unprocessables = await theme_mapping(
         sentiment_df[["response_id", "response"]],
@@ -86,6 +96,7 @@ async def find_themes(
         question=question,
         refined_themes_df=refined_theme_df,
         system_prompt=system_prompt,
+        concurrency=concurrency,
     )
 
     logger.info("Finished finding themes")
@@ -108,6 +119,7 @@ async def sentiment_analysis(
     batch_size: int = 20,
     prompt_template: str | Path | PromptTemplate = "sentiment_analysis",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
+    concurrency: int = 10,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Perform sentiment analysis on survey responses using an LLM.
 
@@ -126,6 +138,7 @@ async def sentiment_analysis(
             or PromptTemplate instance. Defaults to "sentiment_analysis".
         system_prompt (str): System prompt to guide the LLM's behavior.
             Defaults to CONSULTATION_SYSTEM_PROMPT.
+        concurrency (int): Number of concurrent API calls to make. Defaults to 10.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]:
@@ -147,6 +160,7 @@ async def sentiment_analysis(
         validation_check=True,
         task_validation_model=SentimentAnalysisOutput,
         system_prompt=system_prompt,
+        concurrency=concurrency,
     )
 
     return sentiment, unprocessable
@@ -160,6 +174,7 @@ async def theme_generation(
     partition_key: str | None = "position",
     prompt_template: str | Path | PromptTemplate = "theme_generation",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
+    concurrency: int = 10,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Generate themes from survey responses using an LLM.
 
@@ -181,6 +196,7 @@ async def theme_generation(
             or PromptTemplate instance. Defaults to "theme_generation".
         system_prompt (str): System prompt to guide the LLM's behavior.
             Defaults to CONSULTATION_SYSTEM_PROMPT.
+        concurrency (int): Number of concurrent API calls to make. Defaults to 10.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]:
@@ -198,6 +214,7 @@ async def theme_generation(
         partition_key=partition_key,
         question=question,
         system_prompt=system_prompt,
+        concurrency=concurrency,
     )
     return generated_themes, _
 
@@ -209,6 +226,7 @@ async def theme_condensation(
     batch_size: int = 75,
     prompt_template: str | Path | PromptTemplate = "theme_condensation",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
+    concurrency: int = 10,
     **kwargs,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Condense and combine similar themes identified from survey responses.
@@ -228,6 +246,7 @@ async def theme_condensation(
             or PromptTemplate instance. Defaults to "theme_condensation".
         system_prompt (str): System prompt to guide the LLM's behavior.
             Defaults to CONSULTATION_SYSTEM_PROMPT.
+        concurrency (int): Number of concurrent API calls to make. Defaults to 10.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]:
@@ -251,6 +270,7 @@ async def theme_condensation(
             batch_size=batch_size,
             question=question,
             system_prompt=system_prompt,
+            concurrency=concurrency,
             **kwargs,
         )
         themes_df = themes_df.sample(frac=1).reset_index(drop=True)
@@ -267,6 +287,7 @@ async def theme_condensation(
         batch_size=batch_size,
         question=question,
         system_prompt=system_prompt,
+        concurrency=concurrency,
         **kwargs,
     )
 
@@ -281,6 +302,7 @@ async def theme_refinement(
     batch_size: int = 10000,
     prompt_template: str | Path | PromptTemplate = "theme_refinement",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
+    concurrency: int = 10,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Refine and standardize condensed themes using an LLM.
 
@@ -301,6 +323,7 @@ async def theme_refinement(
             or PromptTemplate instance. Defaults to "theme_refinement".
         system_prompt (str): System prompt to guide the LLM's behavior.
             Defaults to CONSULTATION_SYSTEM_PROMPT.
+        concurrency (int): Number of concurrent API calls to make. Defaults to 10.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]:
@@ -323,6 +346,7 @@ async def theme_refinement(
         batch_size=batch_size,
         question=question,
         system_prompt=system_prompt,
+        concurrency=concurrency,
     )
     return refined_themes, _
 
@@ -335,6 +359,7 @@ async def theme_target_alignment(
     batch_size: int = 10000,
     prompt_template: str | Path | PromptTemplate = "theme_target_alignment",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
+    concurrency: int = 10,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Align themes to target number using an LLM.
 
@@ -357,6 +382,7 @@ async def theme_target_alignment(
             or PromptTemplate instance. Defaults to "theme_target_alignment".
         system_prompt (str): System prompt to guide the LLM's behavior.
             Defaults to CONSULTATION_SYSTEM_PROMPT.
+        concurrency (int): Number of concurrent API calls to make. Defaults to 10.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]:
@@ -381,6 +407,7 @@ async def theme_target_alignment(
         question=question,
         system_prompt=system_prompt,
         target_n_themes=target_n_themes,
+        concurrency=concurrency,
     )
     return aligned_themes, _
 
@@ -393,6 +420,7 @@ async def theme_mapping(
     batch_size: int = 20,
     prompt_template: str | Path | PromptTemplate = "theme_mapping",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
+    concurrency: int = 10,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Map survey responses to refined themes using an LLM.
 
@@ -413,6 +441,7 @@ async def theme_mapping(
             or PromptTemplate instance. Defaults to "theme_mapping".
         system_prompt (str): System prompt to guide the LLM's behavior.
             Defaults to CONSULTATION_SYSTEM_PROMPT.
+        concurrency (int): Number of concurrent API calls to make. Defaults to 10.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]:
@@ -444,6 +473,7 @@ async def theme_mapping(
         validation_check=True,
         task_validation_model=ThemeMappingOutput,
         system_prompt=system_prompt,
+        concurrency=concurrency,
     )
     return mapping, unprocessable
 
@@ -455,6 +485,7 @@ async def detail_detection(
     batch_size: int = 20,
     prompt_template: str | Path | PromptTemplate = "detail_detection",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
+    concurrency: int = 10,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Identify responses that provide high-value detailed evidence.
 
@@ -474,6 +505,7 @@ async def detail_detection(
             or PromptTemplate instance. Defaults to "detail_detection".
         system_prompt (str): System prompt to guide the LLM's behavior.
             Defaults to CONSULTATION_SYSTEM_PROMPT.
+        concurrency (int): Number of concurrent API calls to make. Defaults to 10.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]:
@@ -495,5 +527,6 @@ async def detail_detection(
         validation_check=True,
         task_validation_model=DetailDetectionOutput,
         system_prompt=system_prompt,
+        concurrency=concurrency,
     )
     return detailed, _
