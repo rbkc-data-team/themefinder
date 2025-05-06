@@ -105,6 +105,13 @@ async def find_themes(
         system_prompt=system_prompt,
         concurrency=concurrency,
     )
+    detailed_df, _ = await detail_detection(
+        responses_df[["response_id", "response"]],
+        llm,
+        question=question,
+        system_prompt=system_prompt,
+        concurrency=concurrency,
+    )
 
     logger.info("Finished finding themes")
     logger.info(
@@ -115,6 +122,7 @@ async def find_themes(
         "sentiment": sentiment_df,
         "themes": refined_theme_df,
         "mapping": mapping_df,
+        "detailed_responses": detailed_df,
         "unprocessables": pd.concat([sentiment_unprocessables, mapping_unprocessables]),
     }
 
