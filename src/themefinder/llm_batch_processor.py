@@ -312,7 +312,7 @@ async def call_llm(
                     if isinstance(all_results, dict)
                     else all_results.responses
                 )
-            except openai.BadRequestError as e:
+            except (openai.BadRequestError, ValueError) as e:
                 logger.warning(e)
                 return [], batch_prompt.response_ids
             except ValidationError as e:
