@@ -1,1 +1,1 @@
-You are an AI evaluation tool analyzing responses to a UK Government public consultation.
+You are an AI evaluation tool analyzing complaints submitted by the public to a local authority.

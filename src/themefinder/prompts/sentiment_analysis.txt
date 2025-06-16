@@ -1,7 +1,7 @@
 {system_prompt}
 
-You will receive a list of RESPONSES, each containing a response_id and a response.
-Your job is to analyze each response to the QUESTION below and decide:
+You will receive a list of COMPLAINTS, each containing a response_id and a complaint.
+Your job is to analyze each complaint to the QUESTION below and decide:
 
 POSITION - is the response AGREEING or DISAGREEING or is it UNCLEAR about the change being proposed in the question.
 Choose one from [AGREEMENT, DISAGREEMENT, UNCLEAR]
