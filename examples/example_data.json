@@ -1,0 +1,802 @@
+[
+    {
+      "response_id": "1",
+      "response": "Buses need to run more frequently, especially during rush hour."
+    },
+    {
+      "response_id": "2",
+      "response": "The schedule says every 15 minutes but I've been waiting here for 35 minutes. Real-time tracking would help but only if it's accurate."
+    },
+    {
+      "response_id": "3",
+      "response": "Service is pretty reliable during the day, but evenings and weekends are terrible."
+    },
+    {
+      "response_id": "4",
+      "response": "I rely on the 7:45 AM bus to get to work on time, but it's late at least twice a week."
+    },
+    {
+      "response_id": "5",
+      "response": "24/7 service on main routes would be amazing for shift workers."
+    },
+    {
+      "response_id": "6",
+      "response": "The buses bunch up - three come at once then nothing for an hour."
+    },
+    {
+      "response_id": "7",
+      "response": "Sunday service is basically non-existent."
+    },
+    {
+      "response_id": "8",
+      "response": "I can't plan my day around transit because it's so unpredictable."
+    },
+    {
+      "response_id": "9",
+      "response": "Holiday schedules are confusing and poorly communicated."
+    },
+    {
+      "response_id": "10",
+      "response": "More express routes during peak hours would reduce overcrowding."
+    },
+    {
+      "response_id": "11",
+      "response": "Better lighting at bus stops - some areas feel unsafe at night."
+    },
+    {
+      "response_id": "12",
+      "response": "Too many incidents of harassment and no security presence."
+    },
+    {
+      "response_id": "13",
+      "response": "Emergency call buttons on buses would make me feel safer."
+    },
+    {
+      "response_id": "14",
+      "response": "The downtown station is well-lit and feels secure, but suburban stops are sketchy."
+    },
+    {
+      "response_id": "15",
+      "response": "Transit police presence would help with disruptive passengers."
+    },
+    {
+      "response_id": "16",
+      "response": "Women-only cars during late night hours."
+    },
+    {
+      "response_id": "17",
+      "response": "CCTV cameras are good but they need to be visible as a deterrent."
+    },
+    {
+      "response_id": "18",
+      "response": "I avoid certain routes because of safety concerns."
+    },
+    {
+      "response_id": "19",
+      "response": "Better communication during emergencies or security incidents."
+    },
+    {
+      "response_id": "20",
+      "response": "Safe, well-lit walking paths to transit stops."
+    },
+    {
+      "response_id": "21",
+      "response": "Wheelchair ramps that actually work properly."
+    },
+    {
+      "response_id": "22",
+      "response": "Audio announcements are too quiet - I can never hear the stops."
+    },
+    {
+      "response_id": "23",
+      "response": "Priority seating rules need to be enforced, not just suggested."
+    },
+    {
+      "response_id": "24",
+      "response": "As a parent with a stroller, the buses are nearly impossible to navigate."
+    },
+    {
+      "response_id": "25",
+      "response": "Better signage in Braille and large print for visually impaired riders."
+    },
+    {
+      "response_id": "26",
+      "response": "The bus doors close too quickly for elderly passengers."
+    },
+    {
+      "response_id": "27",
+      "response": "Accessible bathrooms at major transit hubs."
+    },
+    {
+      "response_id": "28",
+      "response": "Low-floor buses make such a difference for mobility aid users."
+    },
+    {
+      "response_id": "29",
+      "response": "Driver training on disability awareness and assistance."
+    },
+    {
+      "response_id": "30",
+      "response": "Multiple language announcements for our diverse community."
+    },
+    {
+      "response_id": "31",
+      "response": "The buses smell terrible and the seats are always dirty."
+    },
+    {
+      "response_id": "32",
+      "response": "Broken glass and litter at every bus stop."
+    },
+    {
+      "response_id": "33",
+      "response": "The windows are so dirty you can't see outside."
+    },
+    {
+      "response_id": "34",
+      "response": "Escalators at the main station have been broken for months."
+    },
+    {
+      "response_id": "35",
+      "response": "Regular deep cleaning of vehicles, not just surface wiping."
+    },
+    {
+      "response_id": "36",
+      "response": "Bus stop shelters need better maintenance and graffiti removal."
+    },
+    {
+      "response_id": "37",
+      "response": "The ticket machines are always out of order."
+    },
+    {
+      "response_id": "38",
+      "response": "Proper drainage at bus stops - they flood every time it rains."
+    },
+    {
+      "response_id": "39",
+      "response": "The vehicles sound like they're about to break down."
+    },
+    {
+      "response_id": "40",
+      "response": "Clean bathrooms at transit centers that are actually maintained."
+    },
+    {
+      "response_id": "41",
+      "response": "Monthly passes are too expensive for low-income families."
+    },
+    {
+      "response_id": "42",
+      "response": "Student discounts should be available year-round, not just during school."
+    },
+    {
+      "response_id": "43",
+      "response": "Senior fares are reasonable, but the payment system is confusing."
+    },
+    {
+      "response_id": "44",
+      "response": "Why can't I just tap my credit card like other cities?"
+    },
+    {
+      "response_id": "45",
+      "response": "Free transfers between different transit systems."
+    },
+    {
+      "response_id": "46",
+      "response": "The fare structure is too complicated - just make it simple."
+    },
+    {
+      "response_id": "47",
+      "response": "Day passes should work on all types of transit, not just buses."
+    },
+    {
+      "response_id": "48",
+      "response": "Sliding scale pricing based on income would help working families."
+    },
+    {
+      "response_id": "49",
+      "response": "The transit cards expire too quickly and cost too much to replace."
+    },
+    {
+      "response_id": "50",
+      "response": "Exact change only is ridiculous in 2025."
+    },
+    {
+      "response_id": "51",
+      "response": "No service to the new residential developments on the east side."
+    },
+    {
+      "response_id": "52",
+      "response": "Everything goes downtown but nothing connects the suburbs directly."
+    },
+    {
+      "response_id": "53",
+      "response": "Need a route to the airport that doesn't cost $50 in a taxi."
+    },
+    {
+      "response_id": "54",
+      "response": "Better connections between bus and train lines - the transfer points are too far apart."
+    },
+    {
+      "response_id": "55",
+      "response": "Service to the university campus shouldn't take 90 minutes from downtown."
+    },
+    {
+      "response_id": "56",
+      "response": "Routes to major hospitals and medical centers."
+    },
+    {
+      "response_id": "57",
+      "response": "The industrial area where I work has no transit access."
+    },
+    {
+      "response_id": "58",
+      "response": "More direct routes instead of these ridiculous detours."
+    },
+    {
+      "response_id": "59",
+      "response": "Service to the shopping center and big box stores."
+    },
+    {
+      "response_id": "60",
+      "response": "Connect neighboring cities with regional transit."
+    },
+    {
+      "response_id": "61",
+      "response": "The metal seats are incredibly uncomfortable for any trip longer than 10 minutes."
+    },
+    {
+      "response_id": "62",
+      "response": "Buses are either freezing cold or boiling hot - no in between."
+    },
+    {
+      "response_id": "63",
+      "response": "Covered bus stops that actually protect from rain and wind."
+    },
+    {
+      "response_id": "64",
+      "response": "Free WiFi would make commute time more productive."
+    },
+    {
+      "response_id": "65",
+      "response": "More benches and seating at bus stops for elderly passengers."
+    },
+    {
+      "response_id": "66",
+      "response": "The buses shake so much over potholes I get motion sick."
+    },
+    {
+      "response_id": "67",
+      "response": "Heated shelters for winter weather."
+    },
+    {
+      "response_id": "68",
+      "response": "Better ventilation - the air quality is terrible especially in summer."
+    },
+    {
+      "response_id": "69",
+      "response": "USB charging ports for phones and devices."
+    },
+    {
+      "response_id": "70",
+      "response": "The seating layout is awkward and doesn't maximize space efficiently."
+    },
+    {
+      "response_id": "71",
+      "response": "The transit app crashes constantly and gives wrong arrival times."
+    },
+    {
+      "response_id": "72",
+      "response": "Real-time tracking that's actually accurate, not 15 minutes off."
+    },
+    {
+      "response_id": "73",
+      "response": "Mobile ticket purchasing that works reliably."
+    },
+    {
+      "response_id": "74",
+      "response": "Digital displays at stops showing actual arrival times."
+    },
+    {
+      "response_id": "75",
+      "response": "The GPS tracking is wrong more often than it's right."
+    },
+    {
+      "response_id": "76",
+      "response": "Contactless payment like tap-to-pay cards."
+    },
+    {
+      "response_id": "77",
+      "response": "Better announcements - the speaker system is from the 1980s."
+    },
+    {
+      "response_id": "78",
+      "response": "QR codes for easy schedule and route information."
+    },
+    {
+      "response_id": "79",
+      "response": "The website is impossible to navigate and find simple information."
+    },
+    {
+      "response_id": "80",
+      "response": "Push notifications for service delays and changes."
+    },
+    {
+      "response_id": "81",
+      "response": "Bus drivers are sometimes rude and impatient with passengers."
+    },
+    {
+      "response_id": "82",
+      "response": "Customer service at the transit office is helpful and friendly."
+    },
+    {
+      "response_id": "83",
+      "response": "Drivers need better training on routes - they often don't know stops or detours."
+    },
+    {
+      "response_id": "84",
+      "response": "Lost and found service that actually helps recover items."
+    },
+    {
+      "response_id": "85",
+      "response": "The phone system for complaints and questions is a nightmare."
+    },
+    {
+      "response_id": "86",
+      "response": "Some drivers are great and really care about passengers, others seem miserable."
+    },
+    {
+      "response_id": "87",
+      "response": "Better communication during service disruptions."
+    },
+    {
+      "response_id": "88",
+      "response": "Drivers rush through stops and don't wait for running passengers."
+    },
+    {
+      "response_id": "89",
+      "response": "More responsive feedback system for complaints and suggestions."
+    },
+    {
+      "response_id": "90",
+      "response": "Driver appreciation - they deal with a lot and deserve recognition."
+    },
+    {
+      "response_id": "91",
+      "response": "Electric buses would reduce noise and air pollution."
+    },
+    {
+      "response_id": "92",
+      "response": "Better integration with bike lanes and cycling infrastructure."
+    },
+    {
+      "response_id": "93",
+      "response": "Solar panels on bus stops and transit facilities."
+    },
+    {
+      "response_id": "94",
+      "response": "The diesel fumes from old buses are terrible for air quality."
+    },
+    {
+      "response_id": "95",
+      "response": "Bike racks on all buses for multi-modal transportation."
+    },
+    {
+      "response_id": "96",
+      "response": "Hybrid or electric vehicles to reduce environmental impact."
+    },
+    {
+      "response_id": "97",
+      "response": "Partner with car-sharing services for last-mile connectivity."
+    },
+    {
+      "response_id": "98",
+      "response": "More efficient routing to reduce fuel consumption and emissions."
+    },
+    {
+      "response_id": "99",
+      "response": "Green building standards for new transit facilities."
+    },
+    {
+      "response_id": "100",
+      "response": "Promote transit as climate action - make it the obvious choice over driving."
+    },
+    {
+      "response_id": "101",
+      "response": "Buses are always late, especially during rush hour when I need them most."
+    },
+    {
+      "response_id": "102",
+      "response": "Service every 30 minutes isn't frequent enough for daily commuting."
+    },
+    {
+      "response_id": "103",
+      "response": "The weekend schedule is so limited it's basically useless."
+    },
+    {
+      "response_id": "104",
+      "response": "Holiday service information needs to be clearer and more accessible."
+    },
+    {
+      "response_id": "105",
+      "response": "Express service during peak hours would reduce travel time significantly."
+    },
+    {
+      "response_id": "106",
+      "response": "Late night service for people who work evening shifts."
+    },
+    {
+      "response_id": "107",
+      "response": "The buses bunch up instead of maintaining consistent spacing."
+    },
+    {
+      "response_id": "108",
+      "response": "Snow and weather delays are understandable but communication is poor."
+    },
+    {
+      "response_id": "109",
+      "response": "I've given up on transit because I can't rely on it for important appointments."
+    },
+    {
+      "response_id": "110",
+      "response": "More frequent service would reduce overcrowding on popular routes."
+    },
+    {
+      "response_id": "111",
+      "response": "Drug activity and open substance use make me feel unsafe."
+    },
+    {
+      "response_id": "112",
+      "response": "The emergency call buttons don't seem to work or get responses."
+    },
+    {
+      "response_id": "113",
+      "response": "Well-lit stops make a huge difference for evening commutes."
+    },
+    {
+      "response_id": "114",
+      "response": "Security cameras are good but need visible monitoring."
+    },
+    {
+      "response_id": "115",
+      "response": "Panic buttons and emergency communication systems need improvement."
+    },
+    {
+      "response_id": "116",
+      "response": "Some routes feel safe, others I wouldn't take after dark."
+    },
+    {
+      "response_id": "117",
+      "response": "Transit staff should be trained in de-escalation techniques."
+    },
+    {
+      "response_id": "118",
+      "response": "Better coordination with police for incident response."
+    },
+    {
+      "response_id": "119",
+      "response": "Safe walking routes to transit stops are just as important."
+    },
+    {
+      "response_id": "120",
+      "response": "Metal detectors at major stations might help with safety concerns."
+    },
+    {
+      "response_id": "121",
+      "response": "The wheelchair lift breaks down constantly and isn't maintained."
+    },
+    {
+      "response_id": "122",
+      "response": "Visual announcements for deaf and hard-of-hearing passengers."
+    },
+    {
+      "response_id": "123",
+      "response": "Space for wheelchairs is often blocked by strollers or luggage."
+    },
+    {
+      "response_id": "124",
+      "response": "Tactile strips and guides for visually impaired navigation."
+    },
+    {
+      "response_id": "125",
+      "response": "The gap between platform and bus is too wide for mobility aids."
+    },
+    {
+      "response_id": "126",
+      "response": "Service animals should have designated space on vehicles."
+    },
+    {
+      "response_id": "127",
+      "response": "Accessible route information in multiple formats."
+    },
+    {
+      "response_id": "128",
+      "response": "Priority boarding enforcement for people who need extra time."
+    },
+    {
+      "response_id": "129",
+      "response": "Elevators at transit stations are frequently out of service."
+    },
+    {
+      "response_id": "130",
+      "response": "Staff training on helping passengers with various disabilities."
+    },
+    {
+      "response_id": "131",
+      "response": "The floors are sticky and haven't been properly cleaned in ages."
+    },
+    {
+      "response_id": "132",
+      "response": "Graffiti removal happens but new tags appear immediately."
+    },
+    {
+      "response_id": "133",
+      "response": "The air conditioning system smells moldy and probably needs replacement."
+    },
+    {
+      "response_id": "134",
+      "response": "Regular maintenance schedules should be posted so we know what to expect."
+    },
+    {
+      "response_id": "135",
+      "response": "Vandalism and broken windows make the whole system look neglected."
+    },
+    {
+      "response_id": "136",
+      "response": "Power washing of platforms and waiting areas is desperately needed."
+    },
+    {
+      "response_id": "137",
+      "response": "The smell on some buses is so bad I'd rather walk."
+    },
+    {
+      "response_id": "138",
+      "response": "Preventive maintenance would save money compared to emergency repairs."
+    },
+    {
+      "response_id": "139",
+      "response": "Hand sanitizer stations at major stops and on vehicles."
+    },
+    {
+      "response_id": "140",
+      "response": "Deep cleaning protocols especially after incidents or illnesses."
+    },
+    {
+      "response_id": "141",
+      "response": "The fare is reasonable but payment options are limited and outdated."
+    },
+    {
+      "response_id": "142",
+      "response": "Family passes would make transit more affordable for households with kids."
+    },
+    {
+      "response_id": "143",
+      "response": "Employer subsidies for transit passes would encourage more ridership."
+    },
+    {
+      "response_id": "144",
+      "response": "The cost compared to driving isn't competitive when you factor in time."
+    },
+    {
+      "response_id": "145",
+      "response": "Income-based pricing would help low-income residents access jobs and services."
+    },
+    {
+      "response_id": "146",
+      "response": "Loading money onto transit cards is inconvenient and expensive."
+    },
+    {
+      "response_id": "147",
+      "response": "Free transit during air quality alerts would encourage environmental behavior."
+    },
+    {
+      "response_id": "148",
+      "response": "The payment machines don't give change and often don't work."
+    },
+    {
+      "response_id": "149",
+      "response": "Price transparency - hidden fees and confusing fare structures are frustrating."
+    },
+    {
+      "response_id": "150",
+      "response": "Transit should be free for essential trips like medical appointments."
+    },
+    {
+      "response_id": "151",
+      "response": "The route map is confusing and doesn't match actual service patterns."
+    },
+    {
+      "response_id": "152",
+      "response": "Cross-town connections require going downtown first, adding 45 minutes."
+    },
+    {
+      "response_id": "153",
+      "response": "Service to the community college requires two transfers and takes forever."
+    },
+    {
+      "response_id": "154",
+      "response": "Park and ride lots at suburban stations would increase ridership."
+    },
+    {
+      "response_id": "155",
+      "response": "The new shopping center has no transit access despite being a major destination."
+    },
+    {
+      "response_id": "156",
+      "response": "Better coordination between different transit agencies and systems."
+    },
+    {
+      "response_id": "157",
+      "response": "Circular routes connecting suburban neighborhoods directly."
+    },
+    {
+      "response_id": "158",
+      "response": "Transit to recreational areas like parks and hiking trails."
+    },
+    {
+      "response_id": "159",
+      "response": "The airport connection is expensive and takes longer than driving."
+    },
+    {
+      "response_id": "160",
+      "response": "Service to major employment centers outside downtown."
+    },
+    {
+      "response_id": "161",
+      "response": "Padded seats would make longer journeys much more comfortable."
+    },
+    {
+      "response_id": "162",
+      "response": "The lighting inside buses is too dim for reading or feeling safe."
+    },
+    {
+      "response_id": "163",
+      "response": "Temperature consistency - some buses are arctic, others are saunas."
+    },
+    {
+      "response_id": "164",
+      "response": "Luggage racks for people traveling to airports or carrying shopping."
+    },
+    {
+      "response_id": "165",
+      "response": "The constant engine noise makes conversation impossible."
+    },
+    {
+      "response_id": "166",
+      "response": "Cup holders and small conveniences would improve the experience."
+    },
+    {
+      "response_id": "167",
+      "response": "Facing-forward seats instead of the awkward side-facing configuration."
+    },
+    {
+      "response_id": "168",
+      "response": "Weather protection at stops is inadequate - I get soaked waiting."
+    },
+    {
+      "response_id": "169",
+      "response": "Better handholds and grab bars for standing passengers."
+    },
+    {
+      "response_id": "170",
+      "response": "The suspension system needs work - every bump is jarring."
+    },
+    {
+      "response_id": "171",
+      "response": "Trip planning features that actually work and include real-time updates."
+    },
+    {
+      "response_id": "172",
+      "response": "The electronic displays show wrong information more often than correct."
+    },
+    {
+      "response_id": "173",
+      "response": "Offline maps and schedules for when cell service is poor."
+    },
+    {
+      "response_id": "174",
+      "response": "Integration with navigation apps like Google Maps."
+    },
+    {
+      "response_id": "175",
+      "response": "Automated announcements that are clear and at appropriate volume."
+    },
+    {
+      "response_id": "176",
+      "response": "Digital ticketing that works across all devices and platforms."
+    },
+    {
+      "response_id": "177",
+      "response": "Real-time capacity information so I know if buses are full."
+    },
+    {
+      "response_id": "178",
+      "response": "Service alerts and updates via text message or push notifications."
+    },
+    {
+      "response_id": "179",
+      "response": "The wifi is so slow it's essentially useless."
+    },
+    {
+      "response_id": "180",
+      "response": "Modern payment systems like Apple Pay and Google Pay."
+    },
+    {
+      "response_id": "181",
+      "response": "The information desk staff are knowledgeable and helpful with route planning."
+    },
+    {
+      "response_id": "182",
+      "response": "Complaint resolution takes forever and often gets no response."
+    },
+    {
+      "response_id": "183",
+      "response": "Some drivers go above and beyond to help passengers, others are indifferent."
+    },
+    {
+      "response_id": "184",
+      "response": "Customer service hours don't match when people actually need help."
+    },
+    {
+      "response_id": "185",
+      "response": "Online chat support would be more convenient than phone calls."
+    },
+    {
+      "response_id": "186",
+      "response": "Driver courtesy training would improve the overall experience."
+    },
+    {
+      "response_id": "187",
+      "response": "Clear escalation process for serious complaints or safety issues."
+    },
+    {
+      "response_id": "188",
+      "response": "Multilingual customer service to serve our diverse community."
+    },
+    {
+      "response_id": "189",
+      "response": "Follow-up on feedback to show that suggestions are actually considered."
+    },
+    {
+      "response_id": "190",
+      "response": "Recognition programs for excellent drivers and staff."
+    },
+    {
+      "response_id": "191",
+      "response": "Hydrogen fuel cells could be the future for zero-emission transit."
+    },
+    {
+      "response_id": "192",
+      "response": "Tree planting and green infrastructure around transit stops."
+    },
+    {
+      "response_id": "193",
+      "response": "Carbon offset programs for remaining emissions."
+    },
+    {
+      "response_id": "194",
+      "response": "Electric charging infrastructure for personal devices using renewable energy."
+    },
+    {
+      "response_id": "195",
+      "response": "Partnership with environmental groups to promote sustainable transportation."
+    },
+    {
+      "response_id": "196",
+      "response": "Recycling programs on vehicles and at stations."
+    },
+    {
+      "response_id": "197",
+      "response": "Energy-efficient LED lighting throughout the transit system."
+    },
+    {
+      "response_id": "198",
+      "response": "Biodiesel or other alternative fuels for existing fleet."
+    },
+    {
+      "response_id": "199",
+      "response": "Green roof systems on transit facilities for environmental benefits."
+    },
+    {
+      "response_id": "200",
+      "response": "Make transit the environmentally obvious choice over single-occupancy vehicles."
+    }
+]
