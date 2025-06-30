@@ -117,9 +117,12 @@ system_prompt = st.text_area("Enter system prompt (e.g. directions for theme fin
                              label_visibility='visible')
 
 load_dotenv()
-endpoint = os.getenv("OPENAI_ENDPOINT")
+endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
 deployment = os.getenv("DEPLOYMENT_NAME")
 api_key = os.getenv("AZURE_OPENAI_API_KEY")
+model = os.getenv("AZURE_GPT_MODEL")
+model_version = os.getenv("AZURE_MODEL_VERSION")
+api_version = os.getenv("OPENAI_API_VERSION")
 
 process_button = st.button("Find Themes")
 st.markdown(  
@@ -151,13 +154,13 @@ async def run_themefinder(df, question, system_prompt, n_themes):
         "https://cognitiveservices.azure.com/.default"
     )
     llm = AzureChatOpenAI(
-        model="gpt-4o-mini",
-        azure_deployment="gpt-4o-mini",
-        model_version="2024-11-18",
-        azure_endpoint="https://rbkc-openai-uk2.openai.azure.com/",
+        model=model,
+        azure_deployment=deployment,
+        model_version=model_version,
+        azure_endpoint=endpoint,
         temperature=0.1,
         azure_ad_token_provider=token_provider,
-        api_version="2024-05-01-preview",
+        api_version=api_version,
         http_client=httpx.Client(verify=False),
         http_async_client=httpx.AsyncClient(verify=False),
         openai_api_key=api_key,
