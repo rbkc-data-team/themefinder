@@ -1,0 +1,8 @@
+streamlit
+pandas
+azure-identity
+langchain-openai
+themefinder
+httpx
+python-dotenv
+numpy
