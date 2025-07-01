@@ -22,7 +22,8 @@ st.markdown(
     "  If you pass a dataset through the tool and you find there are too many topics created, re-submit the original data and run the tool again.  This tool will generally perform better on the second or third iteration, providing more condensed themes."
     "<br><br>" 
     "  As with any genAI tool, the outputs from this tool are not a final product and must be reviewed by a human.  <b> YOU are respsible for the final product, not the AI tool.</b>"
-    "  By using this tool you agree to this and take responsibility for editing and verifying the outputs."   
+    "  By using this tool you agree to this and take responsibility for editing and verifying the outputs."
+    "<br><br>  This tool sends data to genAI models based in Azure.  Whilst Microsoft has <a href='https://learn.microsoft.com/en-us/azure/ai-foundry/responsible-ai/openai/data-privacy?tabs=azure-portal#:~:text=Azure%20compliance%20offerings.-,Important,-Your%20prompts%20(inputs' target='_blank'>assurances</a> that data is not used to re-train the models, please DO NOT include personally identifiable information in your datasets."   
     "</p>",  
     unsafe_allow_html=True  
 )  
@@ -127,7 +128,7 @@ api_version = os.getenv("OPENAI_API_VERSION")
 process_button = st.button("Find Themes")
 st.markdown(  
     "<p style='font-size:15px; color:gray;'>"  
-    "This can take 5-10 minutes. A table will appear below when the process is finished."    
+    "This can take a few minutes depending on the size of the dataset. A table will appear below when the process is finished."    
     "</p>",  
     unsafe_allow_html=True  
 )  
