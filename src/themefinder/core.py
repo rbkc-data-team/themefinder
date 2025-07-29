@@ -337,7 +337,7 @@ def theme_clustering(
         target_themes (int, optional): Target number of themes to cluster down to.
             Defaults to 10.
         significance_percentage (float, optional): Percentage threshold for
-            selecting significant themes. Defaults to 15.0.
+            selecting significant themes. Defaults to 10.0.
         return_all_themes (bool, optional): If True, returns all clustered themes.
             If False, returns only significant themes. Defaults to False.
 
