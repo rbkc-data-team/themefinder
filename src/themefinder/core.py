@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-
+from typing import List, Optional  
 import pandas as pd
 from langchain_core.prompts import PromptTemplate
 from langchain.schema.runnable import RunnableWithFallbacks
@@ -27,6 +27,7 @@ async def find_themes(
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
     verbose: bool = True,
     concurrency: int = 10,
+    custom_categories: Optional[List[str]] = None,
 ) -> dict[str, str | pd.DataFrame]:
     """Process survey responses through a multi-stage theme analysis pipeline.
 
@@ -73,6 +74,7 @@ async def find_themes(
         question=question,
         system_prompt=system_prompt,
         concurrency=concurrency,
+        custom_categories=custom_categories, 
     )
     condensed_theme_df, _ = await theme_condensation(
         theme_df,
@@ -189,6 +191,7 @@ async def theme_generation(
     prompt_template: str | Path | PromptTemplate = "theme_generation",
     system_prompt: str = CONSULTATION_SYSTEM_PROMPT,
     concurrency: int = 10,
+    custom_categories: list[str] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Generate themes from survey responses using an LLM.
 
@@ -211,6 +214,7 @@ async def theme_generation(
         system_prompt (str): System prompt to guide the LLM's behavior.
             Defaults to CONSULTATION_SYSTEM_PROMPT.
         concurrency (int): Number of concurrent API calls to make. Defaults to 10.
+        custom_categories (list[str] | None): Optional list of custom categories to guide theme generation.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]:
@@ -220,6 +224,10 @@ async def theme_generation(
 
     """
     logger.info(f"Running theme generation on {len(responses_df)} responses")
+
+    # Join custom categories into a single string or empty string if None  
+    custom_categories_str = "\n".join(custom_categories) if custom_categories else ""
+
     generated_themes, _ = await batch_and_run(
         responses_df,
         prompt_template,
@@ -228,6 +236,7 @@ async def theme_generation(
         partition_key=partition_key,
         question=question,
         system_prompt=system_prompt,
+        custom_categories=custom_categories_str,  # Pass to prompt template
         concurrency=concurrency,
     )
     return generated_themes, _

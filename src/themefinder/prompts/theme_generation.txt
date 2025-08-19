@@ -1,5 +1,10 @@
 {system_prompt}
 
+You should consider the following predefined categories when extracting topics. 
+Use these categories to guide your analysis and help group responses under relevant themes:  
+  
+{custom_categories} 
+
 Below is a question and a list of responses to that question.
 
 Your task is to analyze the RESPONSES below and extract TOPICS such that: 
@@ -33,6 +38,9 @@ EXAMPLE OUTPUT (showing the structure)
 
 QUESTION:
 {question}
+
+Consider the following predefined categories to guide your analysis:  
+{custom_categories}  
 
 RESPONSES:
 {responses}
