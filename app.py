@@ -117,6 +117,15 @@ system_prompt = st.text_area("Enter system prompt (e.g. directions for theme fin
                              help="The system prompt is used as high level instructions for the LLM.  Use this to instruct the tool on specific information relating to the themes/topics you want as an output.  If you do not like the outputs from a theming excersise, try to be more specific in the system prompt.",
                              label_visibility='visible')
 
+custom_categories_input = st.text_area(  
+    "Custom Categories (one per line, optional)",  
+    help="Enter custom categories to guide theme generation. Each category should be on a new line.",  
+    label_visibility='visible'  
+)  
+  
+# Parse input into list of strings  
+custom_categories = [cat.strip() for cat in custom_categories_input.split('\n') if cat.strip()]
+
 load_dotenv()
 endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
 deployment = os.getenv("DEPLOYMENT_NAME")
@@ -149,7 +158,7 @@ def export_df_to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
-async def run_themefinder(df, question, system_prompt, n_themes):
+async def run_themefinder(df, question, system_prompt, n_themes, custom_categories=None):
     token_provider = get_bearer_token_provider(
         DefaultAzureCredential(),
         "https://cognitiveservices.azure.com/.default"
@@ -167,7 +176,7 @@ async def run_themefinder(df, question, system_prompt, n_themes):
         openai_api_key=api_key,
     )
     logger.info("Starting theme finding process...")
-    result = await find_themes(df, llm, question, system_prompt=system_prompt, target_n_themes=n_themes)
+    result = await find_themes(df, llm, question, system_prompt=system_prompt, target_n_themes=n_themes, custom_categories=custom_categories)
     logger.info("Theme finding process completed.")
     return result
   
@@ -232,7 +241,7 @@ if process_button:
 
         if df is not None:
             with st.spinner("Finding themes..."):
-                result = asyncio.run(run_themefinder(df, question, system_prompt, n_themes))
+                result = asyncio.run(run_themefinder(df, question, system_prompt, n_themes, custom_categories))
             merged_df, df_theme = merge_results(result)
             st.success("Themes found and merged successfully!")
             st.session_state["results_df"] = merged_df
