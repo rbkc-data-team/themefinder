@@ -83,3 +83,11 @@ MANIFEST
 
 # Ignore mkdocs site
 site/
+/.vs/VSWorkspaceState.json
+/.vs/slnx.sqlite
+/.vs/themefinder_app.slnx/v18
+/.vs/themefinder_app.slnx
+/.vs/themefinder_app/CopilotIndices/18.4.105.37992
+/.vs/CopilotSnapshots/958AB77BFB18CB4882B63ADE70F2B78C/EA3FB78C9838A941BA9637B169AD843C
+/.vs/CopilotSnapshots/958AB77BFB18CB4882B63ADE70F2B78C
+/.vs/slnx.sqlite-journal

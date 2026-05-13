@@ -148,6 +148,9 @@ if "results_df" not in st.session_state:
 if "theme_df" not in st.session_state:
     st.session_state["theme_df"] = None
 
+if "unprocessables_df" not in st.session_state:
+    st.session_state["unprocessables_df"] = None
+
 def export_df_to_csv(df):
     return df.to_csv(index=False).encode('utf-8')
 
@@ -192,10 +195,16 @@ def fill_na_with_random(df, col="response_id", min_val=5001):
     return df  
 
 def merge_results(result):
-    df_sent = pd.DataFrame.from_dict(result['sentiment'])
-    df_theme = pd.DataFrame.from_dict(result['themes'])
-    df_mapping = pd.DataFrame.from_dict(result['mapping'])
+    df_sent = result['sentiment']
+    df_theme = result['themes'].copy()
+    df_mapping = result['mapping']
+    df_detailed = result.get('detailed_responses')
+    unprocessables = result.get('unprocessables')
+
     merged = df_mapping.merge(df_sent[['position', 'response_id']], how='left', on='response_id')
+
+    if df_detailed is not None and not df_detailed.empty:
+        merged = merged.merge(df_detailed[['response_id', 'evidence_rich']], how='left', on='response_id')
 
     topic_dict = dict(zip(df_theme['topic_id'], df_theme['topic']))
 
@@ -207,16 +216,16 @@ def merge_results(result):
         for j, topic in enumerate(topics):
             merged.at[i, f'topic_{j+1}'] = topic
 
-    df_exploded = merged.explode('labels')  
-    topic_counts = (  
-        df_exploded.groupby('labels')['response_id']  
-        .nunique()  
-        .reset_index()  
-        .rename(columns={'labels': 'topic_id', 'response_id': 'response_count'})  
-    )  
-    df_theme = df_theme.merge(topic_counts, on='topic_id', how='left') 
+    df_exploded = merged.explode('labels')
+    topic_counts = (
+        df_exploded.groupby('labels')['response_id']
+        .nunique()
+        .reset_index()
+        .rename(columns={'labels': 'topic_id', 'response_id': 'response_count'})
+    )
+    df_theme = df_theme.merge(topic_counts, on='topic_id', how='left')
 
-    return merged, df_theme
+    return merged, df_theme, unprocessables
 
 if process_button:
     # Clear previous logs on new run
@@ -231,10 +240,9 @@ if process_button:
         try:
             if uploaded_file.type == "text/csv":
                 df = pd.read_csv(uploaded_file)
-                #df["response"] = df["response"].fillna(" ")
-                df = fill_na_with_random(df, "response_id")   
             else:
                 df = pd.read_excel(uploaded_file)
+            df = fill_na_with_random(df, "response_id")
         except Exception as e:
             st.error(f"Failed to read the file: {e}")
             df = None
@@ -242,11 +250,11 @@ if process_button:
         if df is not None:
             with st.spinner("Finding themes..."):
                 result = asyncio.run(run_themefinder(df, question, system_prompt, n_themes, custom_categories))
-            merged_df, df_theme = merge_results(result)
+            merged_df, df_theme, unprocessables = merge_results(result)
             st.success("Themes found and merged successfully!")
             st.session_state["results_df"] = merged_df
-            st.session_state["theme_df"] = df_theme  
-            #st.session_state["theme_df"] = pd.DataFrame.from_dict(result['themes'])
+            st.session_state["theme_df"] = df_theme
+            st.session_state["unprocessables_df"] = unprocessables if unprocessables is not None and not unprocessables.empty else None
 
 if st.session_state["results_df"] is not None:
     st.download_button(
@@ -260,6 +268,19 @@ if st.session_state["results_df"] is not None:
         data=export_df_to_excel(st.session_state["results_df"]),
         file_name="themefinder_results.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+if st.session_state.get("unprocessables_df") is not None:
+    unproc_df = st.session_state["unprocessables_df"]
+    st.warning(
+        f"{len(unproc_df)} response(s) could not be processed by the LLM and are excluded from the results. "
+        "You can download them below to review manually."
+    )
+    st.download_button(
+        label="Download unprocessable responses as CSV",
+        data=export_df_to_csv(unproc_df),
+        file_name="themefinder_unprocessables.csv",
+        mime="text/csv"
     )
 
 
