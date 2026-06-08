@@ -303,7 +303,9 @@ async def call_llm(
             try:
                 llm_response = await llm.ainvoke(batch_prompt.prompt_string)
                 all_results = (
-                    llm_response.dict()
+                    llm_response.model_dump(mode="python")
+                    if hasattr(llm_response, "model_dump")
+                    else llm_response.dict()
                     if hasattr(llm_response, "dict")
                     else llm_response
                 )
@@ -313,10 +315,10 @@ async def call_llm(
                     else all_results.responses
                 )
             except (openai.BadRequestError, ValueError) as e:
-                logger.warning(e)
+                logger.debug(e)
                 return [], batch_prompt.response_ids
             except ValidationError as e:
-                logger.warning(e)
+                logger.debug(e)
                 return [], batch_prompt.response_ids
 
             if integrity_check:

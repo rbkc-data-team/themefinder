@@ -4,12 +4,16 @@ import asyncio
 import os
 import io
 import logging
+import nest_asyncio
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from langchain_openai import AzureChatOpenAI
 from themefinder import find_themes
 import httpx
 from dotenv import load_dotenv
-import numpy as np  
+import numpy as np
+
+load_dotenv()
+nest_asyncio.apply()
 
 st.set_page_config(page_title="ThemeFinder Tool", layout="wide")
 
@@ -80,13 +84,11 @@ class StreamlitLogHandler(logging.Handler):
 # Setup logger
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-# Remove all handlers associated with the root logger object.
-for handler in logger.handlers[:]:
-    logger.removeHandler(handler)
-streamlit_handler = StreamlitLogHandler()
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-streamlit_handler.setFormatter(formatter)
-logger.addHandler(streamlit_handler)
+if not logger.handlers:
+    streamlit_handler = StreamlitLogHandler()
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    streamlit_handler.setFormatter(formatter)
+    logger.addHandler(streamlit_handler)
 
 # File uploader for .csv and .xlsx
 st.markdown("""  
@@ -113,7 +115,7 @@ question = st.text_input("Enter your question",
                          label_visibility='visible')
 
 system_prompt = st.text_area("Enter system prompt (e.g. directions for theme finding)", 
-                             placeholder="You are an AI evaluation tool analyzing survey responses from a local government regarding the rollout of a grant for residents living near the Grenfell Tower disaster.  You look at the responses to the given survey and group the responses into the number of topics stipulated.",
+                             value="You are an AI evaluation tool analyzing survey responses for a local government public consultation. You look at the responses to the given survey question and group them into the number of topics stipulated.",
                              help="The system prompt is used as high level instructions for the LLM.  Use this to instruct the tool on specific information relating to the themes/topics you want as an output.  If you do not like the outputs from a theming excersise, try to be more specific in the system prompt.",
                              label_visibility='visible')
 
@@ -126,7 +128,6 @@ custom_categories_input = st.text_area(
 # Parse input into list of strings  
 custom_categories = [cat.strip() for cat in custom_categories_input.split('\n') if cat.strip()]
 
-load_dotenv()
 endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
 deployment = os.getenv("DEPLOYMENT_NAME")
 api_key = os.getenv("AZURE_OPENAI_API_KEY")
@@ -166,6 +167,9 @@ async def run_themefinder(df, question, system_prompt, n_themes, custom_categori
         DefaultAzureCredential(),
         "https://cognitiveservices.azure.com/.default"
     )
+    # DISABLE_SSL_VERIFY=true allows corporate networks with SSL inspection to connect.
+    # Leave unset (or set to false) in production Azure deployments.
+    ssl_verify = os.getenv("DISABLE_SSL_VERIFY", "false").lower() != "true"
     llm = AzureChatOpenAI(
         model=model,
         azure_deployment=deployment,
@@ -174,8 +178,8 @@ async def run_themefinder(df, question, system_prompt, n_themes, custom_categori
         temperature=0.1,
         azure_ad_token_provider=token_provider,
         api_version=api_version,
-        http_client=httpx.Client(verify=False),
-        http_async_client=httpx.AsyncClient(verify=False),
+        http_client=httpx.Client(verify=ssl_verify),
+        http_async_client=httpx.AsyncClient(verify=ssl_verify),
         openai_api_key=api_key,
     )
     logger.info("Starting theme finding process...")
@@ -184,37 +188,74 @@ async def run_themefinder(df, question, system_prompt, n_themes, custom_categori
     return result
   
 # Function to assign random int > 5000 to NaN response_id values  
-def fill_na_with_random(df, col="response_id", min_val=5001):  
+def fill_na_with_random(df, col="response_id", min_val=5001):
+    df = df.copy()
     na_mask = df[col].isna()  
     n_na = na_mask.sum()  
     if n_na > 0:  
-        # Generate random integers > 5000 for each NaN  
         random_ids = np.random.randint(min_val, min_val + 10000, size=n_na)  
         df.loc[na_mask, col] = random_ids  
     df[col] = df[col].astype(int)  
-    return df  
+    return df
+
+
+def validate_dataframe(df):
+    """Return an error string if the DataFrame doesn't meet requirements, else None."""
+    required_cols = {"response", "response_id"}
+    missing = required_cols - set(df.columns)
+    if missing:
+        return f"Missing required column(s): {', '.join(missing)}. The file must have exactly the columns 'response' and 'response_id'."
+    if df.empty:
+        return "The uploaded file contains no data rows."
+    try:
+        pd.to_numeric(df["response_id"].dropna(), errors="raise")
+    except (ValueError, TypeError):
+        return "The 'response_id' column contains non-numeric values. It must contain integers only."
+    return None
+
+def _unwrap_enum(value):
+    """Convert a single enum value or a list of enum values to plain strings."""
+    if isinstance(value, list):
+        return [v.value if hasattr(v, 'value') else str(v) for v in value]
+    return value.value if hasattr(value, 'value') else str(value)
 
 def merge_results(result):
-    df_sent = result['sentiment']
+    df_sent = result['sentiment'].copy()
     df_theme = result['themes'].copy()
-    df_mapping = result['mapping']
+    df_mapping = result['mapping'].copy()
     df_detailed = result.get('detailed_responses')
     unprocessables = result.get('unprocessables')
+
+    # Unwrap enum objects to plain strings before any merging or display
+    for col in ['position']:
+        if col in df_sent.columns:
+            df_sent[col] = df_sent[col].apply(_unwrap_enum)
+
+    for col in ['stances', 'labels']:
+        if col in df_mapping.columns:
+            df_mapping[col] = df_mapping[col].apply(
+                lambda v: _unwrap_enum(v) if isinstance(v, list) else v
+            )
 
     merged = df_mapping.merge(df_sent[['position', 'response_id']], how='left', on='response_id')
 
     if df_detailed is not None and not df_detailed.empty:
+        df_detailed = df_detailed.copy()
+        if 'evidence_rich' in df_detailed.columns:
+            df_detailed['evidence_rich'] = df_detailed['evidence_rich'].apply(_unwrap_enum)
         merged = merged.merge(df_detailed[['response_id', 'evidence_rich']], how='left', on='response_id')
 
     topic_dict = dict(zip(df_theme['topic_id'], df_theme['topic']))
 
-    def map_labels_to_topics(labels):
-        return [topic_dict[label] for label in labels]
+    def expand_labels(row):
+        labels = row['labels']
+        if not labels:
+            return pd.Series(dtype='object')
+        topics = [topic_dict.get(label, label) for label in labels]
+        return pd.Series({f'topic_{j+1}': t for j, t in enumerate(topics)})
 
-    for i in range(len(merged)):
-        topics = map_labels_to_topics(merged.at[i, 'labels'])
-        for j, topic in enumerate(topics):
-            merged.at[i, f'topic_{j+1}'] = topic
+    topic_cols = merged.apply(expand_labels, axis=1)
+    merged = pd.concat([merged, topic_cols], axis=1)
 
     df_exploded = merged.explode('labels')
     topic_counts = (
@@ -224,6 +265,17 @@ def merge_results(result):
         .rename(columns={'labels': 'topic_id', 'response_id': 'response_count'})
     )
     df_theme = df_theme.merge(topic_counts, on='topic_id', how='left')
+
+    merged['processing_status'] = 'Processed'
+
+    if unprocessables is not None and not unprocessables.empty:
+        unproc_rows = (
+            unprocessables[['response_id', 'response']]
+            .drop_duplicates(subset='response_id')
+            .copy()
+        )
+        unproc_rows['processing_status'] = 'Could not be processed by LLM - requires manual review'
+        merged = pd.concat([merged, unproc_rows], ignore_index=True, sort=False)
 
     return merged, df_theme, unprocessables
 
@@ -242,14 +294,27 @@ if process_button:
                 df = pd.read_csv(uploaded_file)
             else:
                 df = pd.read_excel(uploaded_file)
-            df = fill_na_with_random(df, "response_id")
+
+            error_msg = validate_dataframe(df)
+            if error_msg:
+                st.error(error_msg)
+                df = None
+            else:
+                blank_mask = df["response"].isna() | (df["response"].astype(str).str.strip() == "")
+                n_blank = blank_mask.sum()
+                if n_blank > 0:
+                    st.warning(f"{n_blank} blank response(s) removed before processing.")
+                    df = df[~blank_mask].reset_index(drop=True)
+                df = fill_na_with_random(df, "response_id")
         except Exception as e:
             st.error(f"Failed to read the file: {e}")
             df = None
 
         if df is not None:
             with st.spinner("Finding themes..."):
-                result = asyncio.run(run_themefinder(df, question, system_prompt, n_themes, custom_categories))
+                result = asyncio.get_event_loop().run_until_complete(
+                    run_themefinder(df, question, system_prompt, n_themes, custom_categories)
+                )
             merged_df, df_theme, unprocessables = merge_results(result)
             st.success("Themes found and merged successfully!")
             st.session_state["results_df"] = merged_df
@@ -272,15 +337,12 @@ if st.session_state["results_df"] is not None:
 
 if st.session_state.get("unprocessables_df") is not None:
     unproc_df = st.session_state["unprocessables_df"]
+    n_unproc = unproc_df['response_id'].nunique()
     st.warning(
-        f"{len(unproc_df)} response(s) could not be processed by the LLM and are excluded from the results. "
-        "You can download them below to review manually."
-    )
-    st.download_button(
-        label="Download unprocessable responses as CSV",
-        data=export_df_to_csv(unproc_df),
-        file_name="themefinder_unprocessables.csv",
-        mime="text/csv"
+        f"{n_unproc} response(s) could not be processed by the LLM. "
+        "They have been included at the bottom of the results file with their original response text. "
+        "Look for rows marked **'Could not be processed by LLM - requires manual review'** "
+        "in the **processing_status** column."
     )
 
 

@@ -18,6 +18,7 @@ venv
 .env
 Brewfile.lock.json
 .cache
+.vs
 
 # Terraform
 **/.terraform/*

@@ -4,7 +4,8 @@ azure-identity
 langchain-openai>=1.0.0
 langchain>=1.0.0
 themefinder
-httpx
+httpx>=0.23.0,<0.29
 python-dotenv
 numpy
 XlsxWriter
+nest-asyncio
