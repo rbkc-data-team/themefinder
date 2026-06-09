@@ -4,6 +4,7 @@ import asyncio
 import os
 import io
 import logging
+import warnings
 import nest_asyncio
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from langchain_openai import AzureChatOpenAI
@@ -14,6 +15,16 @@ import numpy as np
 
 load_dotenv()
 nest_asyncio.apply()
+
+# Suppress pydantic v2 serialiser warnings from langchain-openai's internal use of
+# with_structured_output — the `parsed` field on OpenAI's generic response wrapper is
+# typed `None` but holds a pydantic model at runtime, which pydantic warns about.
+warnings.filterwarnings(
+    "ignore",
+    message=".*PydanticSerializationUnexpectedValue.*",
+    category=UserWarning,
+    module="pydantic",
+)
 
 st.set_page_config(page_title="ThemeFinder Tool", layout="wide")
 
@@ -68,7 +79,8 @@ Supports multiple theme assignments per response through detailed analysis</li>
 </div>
 """
 
-st.markdown(centered_left_aligned_markdown, unsafe_allow_html=True)
+with st.expander("ℹ️ About the ThemeFinder pipeline"):
+    st.markdown(centered_left_aligned_markdown, unsafe_allow_html=True)
 
 
 # Initialize logs list in session state
@@ -119,11 +131,14 @@ system_prompt = st.text_area("Enter system prompt (e.g. directions for theme fin
                              help="The system prompt is used as high level instructions for the LLM.  Use this to instruct the tool on specific information relating to the themes/topics you want as an output.  If you do not like the outputs from a theming excersise, try to be more specific in the system prompt.",
                              label_visibility='visible')
 
-custom_categories_input = st.text_area(  
-    "Custom Categories (one per line, optional)",  
-    help="Enter custom categories to guide theme generation. Each category should be on a new line.",  
-    label_visibility='visible'  
-)  
+_default_custom = "\n".join(st.session_state.get("selected_themes_for_rerun", []))
+custom_categories_input = st.text_area(
+    "Custom Categories (one per line, optional)",
+    value=_default_custom,
+    help="Enter custom categories to guide theme generation. Each category should be on a new line. "
+         "These can be pre-filled by selecting themes from a previous run below.",
+    label_visibility='visible'
+)
   
 # Parse input into list of strings  
 custom_categories = [cat.strip() for cat in custom_categories_input.split('\n') if cat.strip()]
@@ -151,6 +166,9 @@ if "theme_df" not in st.session_state:
 
 if "unprocessables_df" not in st.session_state:
     st.session_state["unprocessables_df"] = None
+
+if "selected_themes_for_rerun" not in st.session_state:
+    st.session_state["selected_themes_for_rerun"] = []
 
 def export_df_to_csv(df):
     return df.to_csv(index=False).encode('utf-8')
@@ -362,12 +380,39 @@ if st.session_state.get("theme_df") is not None:
     # Convert to HTML and display
     st.markdown(theme_df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
 
-    st.download_button(  
-        label="Download themes as Excel",  
-        data=export_df_to_excel(st.session_state["theme_df"]),  
-        file_name="themefinder_themes.xlsx",  
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"  
-    )  
+    st.download_button(
+        label="Download themes as Excel",
+        data=export_df_to_excel(st.session_state["theme_df"]),
+        file_name="themefinder_themes.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+    st.subheader("Refine themes on re-run")
+    st.markdown(
+        "<p style='font-size:15px; color:gray;'>"
+        "Select any themes from this run that you want to keep and focus on. "
+        "Clicking <b>Apply selected themes</b> will pre-fill the Custom Categories box above with your selection. "
+        "Then press <b>Find Themes</b> again — the model will use these as anchors to condense results around your chosen themes."
+        "</p>",
+        unsafe_allow_html=True
+    )
+    current_theme_options = [
+        t for t in st.session_state["theme_df"]["topic"].tolist()
+        if isinstance(t, str)
+    ]
+    valid_defaults = [
+        t for t in st.session_state.get("selected_themes_for_rerun", [])
+        if t in current_theme_options
+    ]
+    selected_themes = st.multiselect(
+        "Select themes to carry forward as custom categories:",
+        options=current_theme_options,
+        default=valid_defaults,
+        help="Your selection will be pre-filled into the Custom Categories input above when you click Apply."
+    )
+    if st.button("✅ Apply selected themes as custom categories"):
+        st.session_state["selected_themes_for_rerun"] = selected_themes
+        st.rerun()
 
 
 # Display logs in a multiline text area after processing completes
